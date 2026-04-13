@@ -47,6 +47,18 @@ services:
     networks:
       - app-network
 
+  mobile:
+    build: ./mobile
+    container_name: motoriz_mobile
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./mobile/MotorizApp:/app
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
 volumes:
   mysqldata:
 
