@@ -4,7 +4,7 @@ USE motoriz;
 
 -- 1. Clientes (Não depende de ninguém)
 CREATE TABLE IF NOT EXISTS clientes (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
     nome VARCHAR(100) NOT NULL,
     cpf VARCHAR(14) UNIQUE NOT NULL,
     cnh VARCHAR(20) UNIQUE NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS clientes (
 
 -- 2. Veículos (Não depende de ninguém)
 CREATE TABLE IF NOT EXISTS veiculos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
     modelo VARCHAR(50) NOT NULL,
     marca VARCHAR(50) NOT NULL,
     placa VARCHAR(10) UNIQUE NOT NULL,
@@ -29,9 +29,9 @@ CREATE TABLE IF NOT EXISTS veiculos (
 
 -- 3. Locações (Depende de Clientes e Veículos)
 CREATE TABLE IF NOT EXISTS locacoes (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    cliente_id INT NOT NULL,
-    veiculo_id INT NOT NULL,
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    cliente_id CHAR(36) NOT NULL,
+    veiculo_id CHAR(36) NOT NULL,
     data_retirada DATETIME NOT NULL,
     data_devolucao_prevista DATETIME NOT NULL,
     data_devolucao_real DATETIME,
@@ -47,8 +47,8 @@ CREATE TABLE IF NOT EXISTS locacoes (
 
 -- 4. Pagamentos (Depende de Locações - Já com campos do n8n)
 CREATE TABLE IF NOT EXISTS pagamentos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    locacao_id INT NOT NULL,
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    locacao_id CHAR(36) NOT NULL,
     valor DECIMAL(10, 2) NOT NULL,
     data_vencimento DATE NOT NULL,
     data_pagamento DATETIME,
@@ -57,19 +57,20 @@ CREATE TABLE IF NOT EXISTS pagamentos (
     parcela_numero INT DEFAULT 1,
     total_parcelas INT DEFAULT 1,
     motivo_recusa VARCHAR(255),
-    
+
     -- Campos para o robô do n8n
+
     notificacao_enviada BOOLEAN DEFAULT FALSE,
     data_ultima_notificacao DATETIME,
     link_boleto_pix VARCHAR(255),
-    
+
     FOREIGN KEY (locacao_id) REFERENCES locacoes(id)
 );
 
 -- 5. Manutenções (Depende de Veículos)
 CREATE TABLE IF NOT EXISTS manutencoes (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    veiculo_id INT NOT NULL,
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    veiculo_id CHAR(36) NOT NULL,
     data_manutencao DATE NOT NULL,
     descricao TEXT NOT NULL,
     custo DECIMAL(10, 2) NOT NULL,
@@ -79,8 +80,8 @@ CREATE TABLE IF NOT EXISTS manutencoes (
 
 -- 6. Vistorias (Depende de Locações)
 CREATE TABLE IF NOT EXISTS vistorias (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    locacao_id INT NOT NULL,
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    locacao_id CHAR(36) NOT NULL,
     tipo ENUM('RETIRADA', 'DEVOLUCAO') NOT NULL,
     data_vistoria TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     nivel_combustivel VARCHAR(20),
@@ -92,9 +93,9 @@ CREATE TABLE IF NOT EXISTS vistorias (
 
 -- 7. Multas (Depende de Veículos e Locações)
 CREATE TABLE IF NOT EXISTS multas (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    veiculo_id INT NOT NULL,
-    locacao_id INT,
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    veiculo_id CHAR(36) NOT NULL,
+    locacao_id CHAR(36),
     codigo_infracao VARCHAR(50),
     valor DECIMAL(10, 2) NOT NULL,
     data_infracao DATETIME NOT NULL,
@@ -105,8 +106,8 @@ CREATE TABLE IF NOT EXISTS multas (
 
 -- 8. Seguros (Depende de Veículos)
 CREATE TABLE IF NOT EXISTS seguros (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    veiculo_id INT NOT NULL,
+    id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    veiculo_id CHAR(36) NOT NULL,
     seguradora VARCHAR(100),
     numero_apolice VARCHAR(50),
     data_vencimento DATE NOT NULL,
