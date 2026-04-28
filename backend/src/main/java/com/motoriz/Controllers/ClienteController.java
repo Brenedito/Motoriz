@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/clientes")
@@ -23,7 +24,7 @@ public class ClienteController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ClienteResponseDTO> findById(@PathVariable Integer id) {
+    public ResponseEntity<ClienteResponseDTO> findById(@PathVariable UUID id) {
         return ResponseEntity.ok(clienteService.findById(id));
     }
 
@@ -33,12 +34,12 @@ public class ClienteController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ClienteResponseDTO> update(@PathVariable Integer id, @RequestBody ClienteRequestDTO dto) {
+    public ResponseEntity<ClienteResponseDTO> update(@PathVariable UUID id, @RequestBody ClienteRequestDTO dto) {
         return ResponseEntity.ok(clienteService.update(id, dto));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
         clienteService.delete(id);
         return ResponseEntity.noContent().build();
     }

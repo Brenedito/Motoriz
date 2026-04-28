@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +24,7 @@ public class ClienteService {
                 .toList();
     }
 
-    public ClienteResponseDTO findById(Integer id) {
+    public ClienteResponseDTO findById(UUID id) {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado: id " + id));
         return ClienteResponseDTO.from(cliente);
@@ -48,7 +49,7 @@ public class ClienteService {
         return ClienteResponseDTO.from(clienteRepository.save(cliente));
     }
 
-    public ClienteResponseDTO update(Integer id, ClienteRequestDTO dto) {
+    public ClienteResponseDTO update(UUID id, ClienteRequestDTO dto) {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado: id " + id));
 
@@ -68,7 +69,7 @@ public class ClienteService {
         return ClienteResponseDTO.from(clienteRepository.save(cliente));
     }
 
-    public void delete(Integer id) {
+    public void delete(UUID id) {
         if (!clienteRepository.existsById(id)) {
             throw new ResourceNotFoundException("Cliente não encontrado: id " + id);
         }

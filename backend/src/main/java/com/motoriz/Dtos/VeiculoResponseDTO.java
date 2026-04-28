@@ -3,8 +3,10 @@ package com.motoriz.Dtos;
 import com.motoriz.Enums.VeiculoStatus;
 import com.motoriz.Models.Veiculo;
 
+import java.util.UUID;
+
 public record VeiculoResponseDTO(
-        Integer id,
+        UUID id,
         String modelo,
         String marca,
         String placa,
