@@ -7,9 +7,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface VeiculoRepository extends JpaRepository<Veiculo, Integer> {
+public interface VeiculoRepository extends JpaRepository<Veiculo, UUID> {
     Optional<Veiculo> findByPlaca(String placa);
     boolean existsByPlaca(String placa);
     List<Veiculo> findByStatus(VeiculoStatus status);

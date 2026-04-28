@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +32,7 @@ public class VeiculoService {
                 .toList();
     }
 
-    public VeiculoResponseDTO findById(Integer id) {
+    public VeiculoResponseDTO findById(UUID id) {
         Veiculo veiculo = veiculoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Veículo não encontrado: id " + id));
         return VeiculoResponseDTO.from(veiculo);
@@ -57,7 +58,7 @@ public class VeiculoService {
         return VeiculoResponseDTO.from(veiculoRepository.save(veiculo));
     }
 
-    public VeiculoResponseDTO update(Integer id, VeiculoRequestDTO dto) {
+    public VeiculoResponseDTO update(UUID id, VeiculoRequestDTO dto) {
         Veiculo veiculo = veiculoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Veículo não encontrado: id " + id));
 
@@ -78,7 +79,7 @@ public class VeiculoService {
         return VeiculoResponseDTO.from(veiculoRepository.save(veiculo));
     }
 
-    public void delete(Integer id) {
+    public void delete(UUID id) {
         if (!veiculoRepository.existsById(id)) {
             throw new ResourceNotFoundException("Veículo não encontrado: id " + id);
         }

@@ -3,9 +3,10 @@ package com.motoriz.Dtos;
 import com.motoriz.Models.Cliente;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public record ClienteResponseDTO(
-        Integer id,
+        UUID id,
         String nome,
         String cpf,
         String cnh,

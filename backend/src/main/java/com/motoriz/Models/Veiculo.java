@@ -4,6 +4,8 @@ import com.motoriz.Enums.VeiculoStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "veiculos")
 @Data
@@ -13,8 +15,9 @@ import lombok.*;
 public class Veiculo {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "CHAR(36)")
+    private UUID id;
 
     @Column(nullable = false, length = 50)
     private String modelo;
