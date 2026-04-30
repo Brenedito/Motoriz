@@ -40,11 +40,6 @@ export function DashboardVeiculos() {
       console.error('Erro ao carregar veículos:', error);
     }
   };
-  const data = new Date().toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: '2-digit',
-  });
   const renderFooter = () => (
     <TouchableOpacity
       style={styles.footerVerMaisVeiculos}
@@ -80,10 +75,10 @@ export function DashboardVeiculos() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.navbar}>
+      {/* <View style={styles.navbar}>
         <Text style={styles.appTitle}>Motoriz</Text>
         <Text style={styles.currentData}>Hoje, {data}</Text>
-      </View>
+      </View> */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Visão Geral da Frota</Text>
         <View style={styles.containerInfos}>
