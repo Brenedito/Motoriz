@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { styles } from '../styles/DashboardStyle';
 import { useEffect, useMemo, useState } from 'react';
-import { getVeiculos } from '../services/api';
+import { getVeiculoByStatus, getVeiculos } from '../services/api';
 
 type statusVeiculo = 'DISPONIVEL' | 'ALUGADO' | 'MANUTENCAO';
 
@@ -27,6 +27,16 @@ interface StatusConfig {
 
 export function DashboardVeiculos() {
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
+  const [statusFiltro, setStatusFiltro] = useState<statusVeiculo | 'TODOS'>(
+    'TODOS',
+  );
+
+  const opcoesFiltro: (statusVeiculo | 'TODOS')[] = [
+    'TODOS',
+    'ALUGADO',
+    'DISPONIVEL',
+    'MANUTENCAO',
+  ];
 
   useEffect(() => {
     carregarVeiculos();
@@ -40,10 +50,24 @@ export function DashboardVeiculos() {
       console.error('Erro ao carregar veículos:', error);
     }
   };
+
+  const handleFiltrarPorStatus = async (filtro: statusVeiculo | 'TODOS') => {
+    if (filtro === statusFiltro) return;
+    setStatusFiltro(filtro);
+
+    if (filtro === 'TODOS') {
+      await carregarVeiculos();
+    } else {
+      try {
+        const response = await getVeiculoByStatus(filtro);
+        setVeiculos(response.data);
+      } catch (error) {
+        console.log('Erro ao carregar veículos por filtro:', error);
+      }
+    }
+  };
   const renderFooter = () => (
-    <TouchableOpacity
-      style={styles.footerVerMaisVeiculos}
-    >
+    <TouchableOpacity style={styles.footerVerMaisVeiculos}>
       <Text style={styles.verMaisVeiculos}>Ver mais veículos</Text>
     </TouchableOpacity>
   );
@@ -71,14 +95,10 @@ export function DashboardVeiculos() {
     return statsVeiculos.total > 0
       ? Math.round((statsVeiculos.alugados / statsVeiculos.total) * 100)
       : 0;
-  }, [statsVeiculos])
+  }, [statsVeiculos]);
 
   return (
     <View style={styles.container}>
-      {/* <View style={styles.navbar}>
-        <Text style={styles.appTitle}>Motoriz</Text>
-        <Text style={styles.currentData}>Hoje, {data}</Text>
-      </View> */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Visão Geral da Frota</Text>
         <View style={styles.containerInfos}>
@@ -109,6 +129,18 @@ export function DashboardVeiculos() {
       <View style={styles.veiculosContainer}>
         <View style={styles.veiculosHeader}>
           <Text style={styles.veiculosHeaderTitle}>Status Atual da Frota</Text>
+          <View style={styles.filtrar}>
+            {opcoesFiltro.map(status => (
+              <TouchableOpacity
+                key={status}
+                onPress={() => handleFiltrarPorStatus(status)}
+              >
+                <Text>
+                  {status === 'TODOS' ? 'Todos' : STATUS_CFG[status].label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
         <View style={styles.veiculosList}>

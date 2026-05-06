@@ -69,7 +69,8 @@ export const styles = StyleSheet.create({
     borderRadius: 8,
   },
   veiculosHeader: {
-    flexDirection: 'column',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginTop: 6,
     marginBottom: 17,
   },
@@ -77,6 +78,11 @@ export const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
     color: '#fff',
+  },
+  filtrar: {
+    flexDirection: 'row',
+    textAlign: 'center',
+    marginTop: 10,
   },
   veiculosList: {
     alignItems: 'center',

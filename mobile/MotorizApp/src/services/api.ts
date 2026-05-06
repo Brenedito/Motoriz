@@ -2,7 +2,7 @@ import axios, { AxiosResponse } from "axios";
 import { Veiculo } from './../screens/DashboardVeiculos';
 
 const api = axios.create({
-    baseURL: 'http://localhost:8080/api',
+    baseURL: 'http://motoriz_backend:8080/api',
 })
 
 export const getVeiculos = (): Promise<AxiosResponse<Veiculo[]>> => {
