@@ -30,6 +30,14 @@ export function DashboardVeiculos() {
   const [statusFiltro, setStatusFiltro] = useState<statusVeiculo | 'TODOS'>(
     'TODOS',
   );
+  const [dropdownAberto, setDropdownAberto] = useState(false);
+
+  const STATUS_LABELS: Record<statusVeiculo | 'TODOS', string> = {
+    TODOS: 'Todos',
+    DISPONIVEL: 'Disponível',
+    ALUGADO: 'Alugado',
+    MANUTENCAO: 'Em Manutenção',
+  };
 
   const opcoesFiltro: (statusVeiculo | 'TODOS')[] = [
     'TODOS',
@@ -47,13 +55,17 @@ export function DashboardVeiculos() {
       const response = await getVeiculos();
       setVeiculos(response.data);
     } catch (error) {
-      console.error('Erro ao carregar veículos:', error);
+      console.log('Erro ao carregar veículos:', error);
     }
   };
 
   const handleFiltrarPorStatus = async (filtro: statusVeiculo | 'TODOS') => {
-    if (filtro === statusFiltro) return;
+    if (filtro === statusFiltro) {
+      setDropdownAberto(false);
+      return;
+    }
     setStatusFiltro(filtro);
+    setDropdownAberto(false);
 
     if (filtro === 'TODOS') {
       await carregarVeiculos();
@@ -129,17 +141,32 @@ export function DashboardVeiculos() {
       <View style={styles.veiculosContainer}>
         <View style={styles.veiculosHeader}>
           <Text style={styles.veiculosHeaderTitle}>Status Atual da Frota</Text>
-          <View style={styles.filtrar}>
-            {opcoesFiltro.map(status => (
-              <TouchableOpacity
-                key={status}
-                onPress={() => handleFiltrarPorStatus(status)}
-              >
-                <Text>
-                  {status === 'TODOS' ? 'Todos' : STATUS_CFG[status].label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          <View style={styles.dropdownFiltrar}>
+            <TouchableOpacity
+              style={styles.botaoSelecao}
+              onPress={() => setDropdownAberto(!dropdownAberto)}
+            >
+              <Text style={styles.textoSelecionado}>
+                {STATUS_LABELS[statusFiltro]} 
+              </Text>
+              <Text style={styles.seta}>{dropdownAberto ? '▲' : '▼'}</Text>
+            </TouchableOpacity>
+            {dropdownAberto && (
+              <View style={styles.opcoesDropdown}>
+                {opcoesFiltro.map(opcao => (
+                  <TouchableOpacity
+                    key={opcao}
+                    style={[
+                      styles.opcaoItem,
+                      statusFiltro === opcao && styles.opcaoSelecionada,
+                    ]}
+                    onPress={() => handleFiltrarPorStatus(opcao)}
+                  >
+                    <Text>{STATUS_LABELS[opcao]}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
           </View>
         </View>
 

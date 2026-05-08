@@ -9,38 +9,32 @@ import { StatusBar, Text, useColorScheme } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { DashboardVeiculos } from './src/screens/DashboardVeiculos';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Documentos } from './src/screens/Documentos';
-import { styles } from './src/styles/DashboardStyle';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { tabOptions } from './src/styles/GlobalStyle';
 
 const Tab = createBottomTabNavigator();
 
+interface HeaderDateProps {
+  data: string;
+}
+
+const HeaderDate = ({ data }: HeaderDateProps) => (
+  <Text style={{ color: '#b5bcc2', fontSize: 14, marginRight: 10 }}>
+    Hoje, {data}
+  </Text>
+);
+
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
-  const data = new Date().toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: '2-digit',
-  });
-
-  const tabBarStyle = {
-    tabBarStyle: {
-      backgroundColor: '#192f53',
-      height: 70,
-      paddingBottom: 10,
-      paddingTop: 10,
-      borderTopWidth: 0,
-      elevation: 10,
-      shadowOpacity: 0.3,
-    },
-    tabBarActiveTintColor: '#fff',
-    tabBarInactiveTintColor: '#b5bcc2',
-    tabBarLabelStyle: {
-      fontSize: 12,
-      fontWeight: '600' as const,
-    },
-  };
+  const dataAtual = useMemo(() => {
+    return new Date().toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: '2-digit',
+    });
+  }, [])
   return (
     <SafeAreaProvider>
       <NavigationContainer>
@@ -51,30 +45,13 @@ function App() {
             headerStyle: { backgroundColor: '#192f53' },
             headerTitleStyle: {
               color: '#fff',
-              fontSize: 20,
-              fontWeight: '500',
             },
-            ...tabBarStyle,
+            headerRight: () => <HeaderDate data={dataAtual} />,
+            ...tabOptions,
           }}
         >
-          <Tab.Screen
-            name="DashboardVeiculos"
-            component={DashboardVeiculos}
-            options={{
-              title: 'Motoriz',
-              headerRight: () => (
-                <Text style={styles.currentData}>Hoje, {data}</Text>
-              ),
-            }}
-          />
-          <Tab.Screen
-            name="Documentos"
-            component={Documentos}
-            options={{
-              title: 'Documentos',
-              headerTitle: 'Meus Documentos',
-            }}
-          />
+          <Tab.Screen name="Dashboard" component={DashboardVeiculos} />
+          <Tab.Screen name="Documentos" component={Documentos} />
         </Tab.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
