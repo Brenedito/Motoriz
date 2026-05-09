@@ -68,71 +68,72 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     zIndex: 1000,
-    // marginTop: 6,
-    // marginBottom: 17,
+    marginLeft: 5,
+    marginBottom: 17,
   },
   veiculosHeaderTitle: {
+    position: 'static',
     fontSize: 18,
     fontWeight: '800',
     color: '#fff',
-    marginRight: 65,
+    flex: 1,
   },
   dropdownFiltrar: {
     position: 'relative',
     minWidth: 100,
-    marginRight: 30
+    alignItems: 'flex-end',
+    zIndex: 1001,
   },
   textoSelecionado: {
     fontSize: 14,
     color: Colors.textMain,
     fontWeight: 'bold',
-    marginLeft: 3
-  },
-  seta: {
-    fontSize: 12,
-    color: Colors.textMain,
-    marginLeft: 6,
+    marginHorizontal: 4
   },
   botaoSelecao: {
     flexDirection: 'row',
     justifyContent: 'center',
-    paddingVertical: 3,
-    paddingHorizontal: 'auto',
-    width: 'auto',
-    backgroundColor: '#882c2c00',
-    borderRadius: 6,
-    borderWidth: 1,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    backgroundColor: Colors.cardBackground,
+    borderRadius: 8,
     borderColor: '#ccc',
+    minWidth: 110,
   },
   opcoesDropdown: {
     position: 'absolute',
-    top: '110%',
+    top: '115%',
     right: 0,
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.cardBackground,
     borderRadius: 10,
-    minWidth: 100,
-    color: Colors.textMain,
-    elevation: 5,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
+    minWidth: 140,
+    elevation: 10,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    overflow: 'scroll',
   },
   opcaoItem: {
-    padding: 6,
+    padding: 5,
     borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  opcaoItemContent: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    width: '100%',
+    paddingHorizontal: 12,
+    height: 20,
+  },
+  opcaoItemText: {
+    flexDirection: 'row',
+    fontSize: 12,
+    fontWeight: '500',
+    color: Colors.textMain
   },
   opcaoSelecionada: {
     backgroundColor: '#1d478b',
     color: Colors.textMain
-  },
-  textoOpcaoAtiva: {
-    color: Colors.primary,
-    fontWeight: 'bold',
-  },
-  filtrarButton: {
-    backgroundColor: '#334155',
-  },
-  filtrarButtonAtivo: {
-
   },
   veiculosList: {
     alignItems: 'center',
@@ -193,14 +194,18 @@ export const styles = StyleSheet.create({
     borderRadius: 20,
   },
   buttonLocalizar: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginTop: 27,
     backgroundColor: '#334155',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    width: 100,
+    gap: 3,
+    paddingHorizontal: 5,
+    paddingVertical: 3,
     borderRadius: 8,
   },
   Localizar: {
-    fontSize: 14,
+    fontSize: 12,
     color: Colors.textMain,
   },
   footerVerMaisVeiculos: {

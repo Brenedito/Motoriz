@@ -5,7 +5,7 @@
  * @format
  */
 import 'react-native-gesture-handler';
-import { StatusBar, Text, useColorScheme } from 'react-native';
+import { Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { DashboardVeiculos } from './src/screens/DashboardVeiculos';
@@ -13,6 +13,8 @@ import React, { useMemo } from 'react';
 import { Documentos } from './src/screens/Documentos';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { tabOptions } from './src/styles/GlobalStyle';
+import { LayoutDashboard, FileText } from 'lucide-react-native';
+
 
 const Tab = createBottomTabNavigator();
 
@@ -27,7 +29,6 @@ const HeaderDate = ({ data }: HeaderDateProps) => (
 );
 
 function App() {
-  const isDarkMode = useColorScheme() === 'dark';
   const dataAtual = useMemo(() => {
     return new Date().toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -38,7 +39,6 @@ function App() {
   return (
     <SafeAreaProvider>
       <NavigationContainer>
-        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
         <Tab.Navigator
           screenOptions={{
             headerShown: true,
@@ -50,8 +50,16 @@ function App() {
             ...tabOptions,
           }}
         >
-          <Tab.Screen name="Dashboard" component={DashboardVeiculos} />
-          <Tab.Screen name="Documentos" component={Documentos} />
+          <Tab.Screen name="Dashboard" component={DashboardVeiculos} options={{
+            tabBarIcon: ({ color, size }) => (
+              <LayoutDashboard color={color} size={size}/>
+            )
+          }}/>
+          <Tab.Screen name="Documentos" component={Documentos} options={{
+            tabBarIcon: ({ color, size }) => (
+              <FileText color={color} size={size}/>
+            )
+          }}/>
         </Tab.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
