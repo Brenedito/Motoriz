@@ -7,13 +7,15 @@ import {
   ViewStyle,
 } from 'react-native';
 import { styles } from '../styles/DashboardStyle';
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { getVeiculoByStatus, getVeiculos } from '../services/api';
+import { Colors } from '../styles/Colors';
+import { ChevronUp, ChevronDown, MapPin } from 'lucide-react-native';
 
 type statusVeiculo = 'DISPONIVEL' | 'ALUGADO' | 'MANUTENCAO';
 
 export interface Veiculo {
-  id: string | number;
+  id: string;
   placa: string;
   modelo: string;
   quilometragemAtual: number;
@@ -30,6 +32,14 @@ export function DashboardVeiculos() {
   const [statusFiltro, setStatusFiltro] = useState<statusVeiculo | 'TODOS'>(
     'TODOS',
   );
+  const [dropdownAberto, setDropdownAberto] = useState(false);
+
+  const STATUS_LABELS: Record<statusVeiculo | 'TODOS', string> = {
+    TODOS: 'Todos',
+    DISPONIVEL: 'Disponível',
+    ALUGADO: 'Alugado',
+    MANUTENCAO: 'Em Manutenção',
+  };
 
   const opcoesFiltro: (statusVeiculo | 'TODOS')[] = [
     'TODOS',
@@ -47,13 +57,17 @@ export function DashboardVeiculos() {
       const response = await getVeiculos();
       setVeiculos(response.data);
     } catch (error) {
-      console.error('Erro ao carregar veículos:', error);
+      console.log('Erro ao carregar veículos:', error);
     }
   };
 
   const handleFiltrarPorStatus = async (filtro: statusVeiculo | 'TODOS') => {
-    if (filtro === statusFiltro) return;
+    if (filtro === statusFiltro) {
+      setDropdownAberto(false);
+      return;
+    }
     setStatusFiltro(filtro);
+    setDropdownAberto(false);
 
     if (filtro === 'TODOS') {
       await carregarVeiculos();
@@ -128,18 +142,35 @@ export function DashboardVeiculos() {
       </View>
       <View style={styles.veiculosContainer}>
         <View style={styles.veiculosHeader}>
-          <Text style={styles.veiculosHeaderTitle}>Status Atual da Frota</Text>
-          <View style={styles.filtrar}>
-            {opcoesFiltro.map(status => (
-              <TouchableOpacity
-                key={status}
-                onPress={() => handleFiltrarPorStatus(status)}
-              >
-                <Text>
-                  {status === 'TODOS' ? 'Todos' : STATUS_CFG[status].label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          <Text style={styles.veiculosHeaderTitle}>Veículos Ativos</Text>
+          <View style={styles.dropdownFiltrar}>
+            <TouchableOpacity
+              style={styles.botaoSelecao}
+              onPress={() => setDropdownAberto(!dropdownAberto)}
+            >
+              <Text style={styles.textoSelecionado}>
+                {STATUS_LABELS[statusFiltro]}
+              </Text>
+              {dropdownAberto ? <ChevronUp size={20} color={Colors.textMain}/> : <ChevronDown size={20} color={Colors.textMain}/>}
+            </TouchableOpacity>
+            {dropdownAberto && (
+              <View style={styles.opcoesDropdown}>
+                {opcoesFiltro.map(opcao => (
+                  <TouchableOpacity
+                    key={opcao}
+                    style={[
+                      styles.opcaoItem,
+                      statusFiltro === opcao && styles.opcaoSelecionada,
+                    ]}
+                    onPress={() => handleFiltrarPorStatus(opcao)}
+                  >
+                    <View style={styles.opcaoItemContent}>
+                      <Text style={styles.opcaoItemText}>{STATUS_LABELS[opcao]}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
           </View>
         </View>
 
@@ -163,6 +194,7 @@ export function DashboardVeiculos() {
                       {config.label}
                     </Text>
                     <TouchableOpacity style={styles.buttonLocalizar}>
+                      <MapPin size={17} color={Colors.textMain}/>
                       <Text style={styles.Localizar}>Localizar</Text>
                     </TouchableOpacity>
                   </View>
