@@ -1,9 +1,3 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
 import 'react-native-gesture-handler';
 import { Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
@@ -12,8 +6,9 @@ import { DashboardVeiculos } from './src/screens/DashboardVeiculos';
 import React, { useMemo } from 'react';
 import { Documentos } from './src/screens/Documentos';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { tabOptions } from './src/styles/GlobalStyle';
+import { style, tabOptions } from './src/styles/GlobalStyle';
 import { LayoutDashboard, FileText } from 'lucide-react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 
 const Tab = createBottomTabNavigator();
@@ -23,7 +18,7 @@ interface HeaderDateProps {
 }
 
 const HeaderDate = ({ data }: HeaderDateProps) => (
-  <Text style={{ color: '#b5bcc2', fontSize: 14, marginRight: 10 }}>
+  <Text style={style.headerDate}>
     Hoje, {data}
   </Text>
 );
@@ -37,7 +32,8 @@ function App() {
     });
   }, [])
   return (
-    <SafeAreaProvider>
+    <GestureHandlerRootView style={{flex: 1}}>
+      <SafeAreaProvider>
       <NavigationContainer>
         <Tab.Navigator
           screenOptions={{
@@ -51,18 +47,19 @@ function App() {
           }}
         >
           <Tab.Screen name="Dashboard" component={DashboardVeiculos} options={{
-            tabBarIcon: ({ color, size }) => (
+            tabBarIcon: ({ color, size }: any) => (
               <LayoutDashboard color={color} size={size}/>
             )
           }}/>
           <Tab.Screen name="Documentos" component={Documentos} options={{
-            tabBarIcon: ({ color, size }) => (
+            tabBarIcon: ({ color, size }: any) => (
               <FileText color={color} size={size}/>
             )
           }}/>
         </Tab.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
