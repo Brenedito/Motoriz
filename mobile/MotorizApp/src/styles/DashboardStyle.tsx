@@ -1,25 +1,10 @@
 import { StyleSheet } from 'react-native';
-import { Colors } from './Colors';
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: '#0F172A',
     alignItems: 'center',
-  },
-  navbar: {
-    flexDirection: 'row',
-    width: '100%',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    alignItems: 'center',
-    backgroundColor: Colors.primary,
-  },
-  appTitle: {
-    fontSize: 20,
-    fontWeight: '500',
-    color: '#FFF',
   },
   header: {
     padding: 16,
@@ -37,31 +22,31 @@ export const styles = StyleSheet.create({
   },
   infoCard: {
     width: '48%',
-    backgroundColor: Colors.primary,
+    backgroundColor: '#192f53',
     borderRadius: 14,
     borderWidth: 1,
     padding: 14,
-    borderColor: Colors.border,
+    borderColor: '#1f2f42',
   },
   cardLabel: {
     fontSize: 12.5,
-    color: Colors.textMuted,
+    color: '#83898f',
     fontWeight: '600',
   },
   cardValue: {
     fontSize: 30,
     fontWeight: '800',
-    color: Colors.textMain,
+    color: '#E6EDF3',
   },
   cardDescription: {
     fontSize: 11,
-    color: Colors.textMuted,
+    color: '#83898f',
   },
   veiculosContainer: {
     padding: 14,
-    backgroundColor: Colors.primary,
+    backgroundColor: '#192f53',
     width: '90%',
-    borderRadius: 8,
+    borderRadius: 8, 
   },
   veiculosHeader: {
     flexDirection: 'row',
@@ -86,16 +71,16 @@ export const styles = StyleSheet.create({
   },
   textoSelecionado: {
     fontSize: 14,
-    color: Colors.textMain,
+    color: '#E6EDF3',
     fontWeight: 'bold',
-    marginHorizontal: 4
+    marginHorizontal: 4,
   },
   botaoSelecao: {
     flexDirection: 'row',
     justifyContent: 'center',
     paddingVertical: 6,
     paddingHorizontal: 8,
-    backgroundColor: Colors.cardBackground,
+    backgroundColor: '#1E293B',
     borderRadius: 8,
     borderColor: '#ccc',
     minWidth: 110,
@@ -104,7 +89,7 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     top: '115%',
     right: 0,
-    backgroundColor: Colors.cardBackground,
+    backgroundColor: '#1E293B',
     borderRadius: 10,
     minWidth: 140,
     elevation: 10,
@@ -115,7 +100,7 @@ export const styles = StyleSheet.create({
   opcaoItem: {
     padding: 5,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: '#1f2f42'
   },
   opcaoItemContent: {
     flexDirection: 'row',
@@ -129,11 +114,11 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     fontSize: 12,
     fontWeight: '500',
-    color: Colors.textMain
+    color: '#E6EDF3',
   },
   opcaoSelecionada: {
-    backgroundColor: '#1d478b',
-    color: Colors.textMain
+    backgroundColor: '#1d478d',
+    color: '#E6EDF3',
   },
   veiculosList: {
     alignItems: 'center',
@@ -145,7 +130,7 @@ export const styles = StyleSheet.create({
   veiculosCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: Colors.cardBackground,
+    backgroundColor: '#1E293B',
     borderRadius: 10,
     paddingHorizontal: 18,
     paddingVertical: 10,
@@ -161,13 +146,13 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     fontSize: 14,
-    color: Colors.textMain,
+    color: '#E6EDF3',
     fontWeight: '600',
     marginVertical: 5,
   },
   veiculosPlaca: {
     fontSize: 14,
-    color: Colors.textMain,
+    color: '#E6EDF3',
     backgroundColor: '#334155',
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -178,22 +163,22 @@ export const styles = StyleSheet.create({
   },
   veiculosKm: {
     fontSize: 11,
-    color: Colors.textMuted,
+    color: '#83898f',
   },
-  statusAndButtonLocalizar: {
+  statusEBotaoLocalizar: {
     flexDirection: 'column',
     alignItems: 'center',
   },
   veiculosStatus: {
     fontSize: 12,
     fontWeight: '600',
-    color: Colors.success,
-    backgroundColor: 'rgba(34, 197, 94, 0.15)',
+    color: '#22C55E',
+    backgroundColor: '#22c55e26',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 20,
   },
-  buttonLocalizar: {
+  botaoLocalizar: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 27,
@@ -204,30 +189,30 @@ export const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 8,
   },
-  Localizar: {
+  textLocalizar: {
     fontSize: 12,
-    color: Colors.textMain,
+    color: '#E6EDF3',
   },
   footerVerMaisVeiculos: {
     padding: 12,
     alignItems: 'center',
   },
   verMaisVeiculos: {
-    color: Colors.success,
+    color: '#22C55E',
     fontSize: 14,
     fontWeight: '600',
     marginVertical: 10,
   },
   statusDisponivel: {
-    backgroundColor: '#22c55e26',
-    color: '#22C55E'
+    backgroundColor: '#22c55e4d',
+    color: '#22C55E',
   },
   statusAlugado: {
     color: '#3B82F6',
-    backgroundColor: '#3b82f626'
-  }, 
+    backgroundColor: '#3b82f626',
+  },
   statusManutencao: {
     backgroundColor: '#f59e0b26',
-    color: '#F59E0B',
+    color: '#F59E0B'
   }
-});
+})

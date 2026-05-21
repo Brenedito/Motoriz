@@ -9,21 +9,11 @@ import {
 import { styles } from '../styles/DashboardStyle';
 import React, { useEffect, useMemo, useState } from 'react';
 import { getVeiculoByStatus, getVeiculos } from '../services/api';
-import { Colors } from '../styles/Colors';
 import { ChevronUp, ChevronDown, MapPin } from 'lucide-react-native';
-
-type statusVeiculo = 'DISPONIVEL' | 'ALUGADO' | 'MANUTENCAO';
-
-export interface Veiculo {
-  id: string;
-  placa: string;
-  modelo: string;
-  quilometragemAtual: number;
-  status: statusVeiculo;
-}
+import { statusVeiculo, Veiculo } from '../@types/Veiculos';
 
 interface StatusConfig {
-  label: string;
+  label: string
   style: TextStyle | ViewStyle;
 }
 
@@ -151,7 +141,7 @@ export function DashboardVeiculos() {
               <Text style={styles.textoSelecionado}>
                 {STATUS_LABELS[statusFiltro]}
               </Text>
-              {dropdownAberto ? <ChevronUp size={20} color={Colors.textMain}/> : <ChevronDown size={20} color={Colors.textMain}/>}
+              {dropdownAberto ? <ChevronUp size={20} color={'#E6EDF3'}/> : <ChevronDown size={20} color={'#E6EDF3'}/>}
             </TouchableOpacity>
             {dropdownAberto && (
               <View style={styles.opcoesDropdown}>
@@ -189,13 +179,13 @@ export function DashboardVeiculos() {
                       KM: {item.quilometragemAtual}
                     </Text>
                   </View>
-                  <View style={styles.statusAndButtonLocalizar}>
+                  <View style={styles.statusEBotaoLocalizar}>
                     <Text style={[styles.veiculosStatus, config.style]}>
                       {config.label}
                     </Text>
-                    <TouchableOpacity style={styles.buttonLocalizar}>
-                      <MapPin size={17} color={Colors.textMain}/>
-                      <Text style={styles.Localizar}>Localizar</Text>
+                    <TouchableOpacity style={styles.botaoLocalizar}>
+                      <MapPin size={17} color={'#E6EDF3'}/>
+                      <Text style={styles.textLocalizar}>Localizar</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
