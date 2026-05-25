@@ -6,7 +6,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { styles } from '../styles/DashboardStyle';
+import { styles } from '../styles/DashboardVeiculosStyle';
 import React, { useEffect, useMemo, useState } from 'react';
 import { getVeiculoByStatus, getVeiculos } from '../services/api';
 import { ChevronUp, ChevronDown, MapPin } from 'lucide-react-native';
