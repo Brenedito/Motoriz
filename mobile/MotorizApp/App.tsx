@@ -9,6 +9,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { style, tabOptions } from './src/styles/GlobalStyle';
 import { LayoutDashboard, FileText } from 'lucide-react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Login from './src/screens/Login';
+import { SquareUser } from 'lucide-react-native/icons';
 
 
 const Tab = createBottomTabNavigator();
@@ -54,6 +56,11 @@ function App() {
           <Tab.Screen name="Documentos" component={Documentos} options={{
             tabBarIcon: ({ color, size }: any) => (
               <FileText color={color} size={size}/>
+            )
+            }} />
+            <Tab.Screen name="Perfil" component={Login} options={{
+              tabBarIcon: ({ color, size }: any) => (
+                <SquareUser color={color} size={size}/>
             )
           }}/>
         </Tab.Navigator>

@@ -50,13 +50,12 @@ services:
   mobile:
     build: ./mobile
     container_name: motoriz_mobile
-    environment:
-      - CHOKIDAR_USEPOLLING=true
-      - WATCHPACK_POLLING=true
     ports:
       - "8081:8081"
     volumes:
       - ./mobile/MotorizApp:/app
+    environment: 
+      - WATCHPACK_POLLING=true
     depends_on:
       - backend
     networks:

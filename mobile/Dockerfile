@@ -1,6 +1,6 @@
 FROM node:20
 WORKDIR /app
 COPY MotorizApp/package*.json ./
-RUN npm install
+RUN npm install --legacy-peer-deps
 COPY MotorizApp/ .
-CMD ["npx", "react-native", "start"]
+CMD ["npm", "start", "--", "--reset-cache"]

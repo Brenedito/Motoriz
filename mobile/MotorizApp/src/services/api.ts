@@ -1,8 +1,8 @@
 import axios, { AxiosResponse } from "axios";
-import { Veiculo } from './../screens/DashboardVeiculos';
+import { Veiculo } from "../@types/Veiculos";
 
 const api = axios.create({
-    baseURL: 'http://localhost:8080/api',
+    baseURL: 'http://192.168.100.6:8080/api',
     timeout: 5000,
 })
 
