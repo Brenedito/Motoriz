@@ -3,32 +3,34 @@ import { StyleSheet } from 'react-native';
 export const NotFoundStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#0F172A',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 16,
   },
   card: {
-    backgroundColor: 'rgba(26, 26, 26, 0.8)',
+    backgroundColor: '#192f53',
     borderRadius: 12,
     paddingVertical: 32,
     paddingHorizontal: 24,
     alignItems: 'center',
     maxWidth: 400,
     width: '100%',
+    borderWidth: 1,
+    borderColor: '#1f2f42',
   },
   iconContainer: {
     marginBottom: 24,
     alignItems: 'center',
   },
   iconWrapper: {
-    backgroundColor: 'rgba(255, 68, 68, 0.2)',
+    backgroundColor: '#EF444426',
     borderRadius: 50,
     padding: 16,
   },
   icon: {
     fontSize: 64,
-    color: '#ff4444'
+    color: '#EF4444'
   },
   title: {
     fontSize: 48,
@@ -39,12 +41,12 @@ export const NotFoundStyles = StyleSheet.create({
   subtitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#ccc',
+    color: '#E6EDF3',
     marginBottom: 16,
   },
   description: {
     fontSize: 14,
-    color: '#999',
+    color: '#83898f',
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 22,
@@ -54,7 +56,7 @@ export const NotFoundStyles = StyleSheet.create({
     width: '100%',
   },
   button: {
-    backgroundColor: '#0066cc',
+    backgroundColor: '#22C55E',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,

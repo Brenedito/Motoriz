@@ -3,13 +3,13 @@ import { StyleSheet } from 'react-native';
 export const HomeStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#0F172A',
   },
   header: {
     paddingVertical: 16,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    borderBottomColor: '#1f2f42',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -42,7 +42,7 @@ export const HomeStyles = StyleSheet.create({
   },
   heroDescription: {
     fontSize: 16,
-    color: '#999',
+    color: '#83898f',
     textAlign: 'center',
     marginBottom: 24,
   },
@@ -65,10 +65,12 @@ export const HomeStyles = StyleSheet.create({
     gap: 16,
   },
   featureCard: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#192f53',
     padding: 16,
     borderRadius: 8,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#1f2f42',
   },
   featureCardTitle: {
     fontSize: 14,
@@ -78,13 +80,15 @@ export const HomeStyles = StyleSheet.create({
   },
   featureCardText: {
     fontSize: 12,
-    color: '#999',
+    color: '#83898f',
   },
   ctaSection: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#192f53',
     padding: 24,
     borderRadius: 8,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#1f2f42',
   },
   ctaTitle: {
     fontSize: 24,
@@ -95,7 +99,7 @@ export const HomeStyles = StyleSheet.create({
   },
   ctaDescription: {
     fontSize: 14,
-    color: '#999',
+    color: '#83898f',
     marginBottom: 16,
     textAlign: 'center',
   },
@@ -103,12 +107,12 @@ export const HomeStyles = StyleSheet.create({
     paddingVertical: 24,
     paddingHorizontal: 16,
     borderTopWidth: 1,
-    borderTopColor: '#333',
+    borderTopColor: '#1f2f42',
     alignItems: 'center',
   },
   footerText: {
     fontSize: 11,
-    color: '#666',
+    color: '#83898f',
     marginBottom: 4,
   },
 });
