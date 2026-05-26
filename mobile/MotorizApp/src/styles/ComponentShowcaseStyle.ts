@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 export const ComponentShowcaseStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#0F172A',
   },
   mainContainer: {
     flex: 1,
@@ -25,7 +25,7 @@ export const ComponentShowcaseStyles = StyleSheet.create({
     padding: 8,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: '#1f2f42',
   },
   sectionsContainer: {
     gap: 32,
@@ -39,21 +39,21 @@ export const ComponentShowcaseStyles = StyleSheet.create({
     color: '#fff',
   },
   card: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#192f53',
     borderRadius: 8,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: '#1f2f42',
   },
   footer: {
     borderTopWidth: 1,
-    borderTopColor: '#333',
+    borderTopColor: '#1f2f42',
     paddingVertical: 12,
     alignItems: 'center',
     marginTop: 24,
   },
   footerText: {
     fontSize: 12,
-    color: '#999',
+    color: '#83898f',
   },
 });

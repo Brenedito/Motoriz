@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 export const RegisterStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#0F172A',
     justifyContent: 'center',
     paddingHorizontal: 16,
     paddingVertical: 32,
@@ -24,15 +24,17 @@ export const RegisterStyles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 12,
-    color: '#999',
+    color: '#83898f',
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
   card: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#192f53',
     borderRadius: 8,
     padding: 20,
     marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#1f2f42',
   },
   form: {
     gap: 20,
@@ -48,9 +50,9 @@ export const RegisterStyles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   input: {
-    backgroundColor: '#000',
+    backgroundColor: '#1E293B',
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: '#1f2f42',
     borderRadius: 6,
     paddingVertical: 12,
     paddingHorizontal: 12,
@@ -58,16 +60,16 @@ export const RegisterStyles = StyleSheet.create({
     fontSize: 14,
   },
   inputError: {
-    borderColor: '#ff4444',
+    borderColor: '#EF4444',
   },
   errorText: {
     fontSize: 12,
-    color: '#ff4444',
+    color: '#EF4444',
     marginTop: 4,
   },
   passwordStrength: {
     fontSize: 12,
-    color: '#22c55e',
+    color: '#22C55E',
     marginTop: 4,
   },
   button: {
@@ -82,20 +84,20 @@ export const RegisterStyles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#333',
+    backgroundColor: '#1f2f42',
   },
   dividerText: {
     fontSize: 11,
-    color: '#999',
+    color: '#83898f',
     textTransform: 'uppercase',
   },
   linkText: {
     textAlign: 'center',
     fontSize: 12,
-    color: '#999',
+    color: '#83898f',
   },
   linkBold: {
-    color: '#ff6b00',
+    color: '#22C55E',
     fontWeight: '600',
   },
   footer: {
@@ -104,6 +106,6 @@ export const RegisterStyles = StyleSheet.create({
   },
   footerText: {
     fontSize: 11,
-    color: '#666',
+    color: '#83898f',
   },
 });
