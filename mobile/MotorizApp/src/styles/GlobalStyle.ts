@@ -10,11 +10,12 @@ export const tabOptions: BottomTabNavigationOptions = {
     borderTopWidth: 0,
     elevation: 10,
     shadowOpacity: 0.3,
+    justifyContent: 'space-around',
   },
   tabBarActiveTintColor: '#fff',
   tabBarInactiveTintColor: '#b5bcc2',
   tabBarLabelStyle: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
   },
 }

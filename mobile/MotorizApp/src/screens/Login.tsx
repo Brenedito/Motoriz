@@ -11,6 +11,7 @@ import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { LoginStyles } from "../styles/LoginStyle";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigation } from "@react-navigation/native";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido").min(1, "Email é obrigatório"),
@@ -19,7 +20,11 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function Login() {
+interface NavegarParaRegister {
+  onMudarTela: () => void;
+}
+
+export default function Login({ onMudarTela}: NavegarParaRegister) {
   const [apiError, setApiError] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -164,7 +169,7 @@ export default function Login() {
                     fontWeight: "600",
                   }}
                 >
-                  {isSubmitting ? "Autenticando..." : "[ ACESSAR SISTEMA ]"}
+                  {isSubmitting ? "Autenticando..." : "ACESSAR SISTEMA"}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -181,7 +186,7 @@ export default function Login() {
               Não tem conta?{" "}
               <Text
                 style={LoginStyles.linkBold}
-                onPress={() => Alert.alert("Registrar", "Funcionalidade de registro ainda não implementada")}
+                onPress={onMudarTela}
               >
                 Criar conta
               </Text>

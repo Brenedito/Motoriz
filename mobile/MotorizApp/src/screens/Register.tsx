@@ -3,12 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'reac
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useLocation } from 'wouter';
 import { RegisterStyles } from '../styles/RegisterStyle';
-
-// Remove these backend-related imports:
-// import { useAuth } from '@/_core/hooks/useAuth';
-// import { trpc } from '@/lib/trpc';
 
 const registerSchema = z.object({
   name: z.string().min(3, 'Nome deve ter no mínimo 3 caracteres'),
@@ -25,8 +20,11 @@ const registerSchema = z.object({
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
-export default function Register() {
-  const [, setLocation] = useLocation();
+interface NavegarParaLogin {
+  onMudarTela: () => void;
+}
+
+export default function Register({ onMudarTela}: NavegarParaLogin) {
   const [apiError, setApiError] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -51,7 +49,6 @@ export default function Register() {
     try {
       Alert.alert('Registro', `Nome: ${data.name}\nEmail: ${data.email}\nDados serão enviados ao backend`);
       setTimeout(() => {
-        setLocation('/login');
         setIsSubmitting(false);
       }, 500);
     } catch (error: any) {
@@ -67,6 +64,7 @@ export default function Register() {
       ? 'strong'
       : 'weak'
   ) : null;
+
 
   return (
     <View style={RegisterStyles.container}>
@@ -198,7 +196,7 @@ export default function Register() {
                 disabled={isSubmitting}
               >
                 <Text style={{ color: '#fff', textAlign: 'center', fontWeight: '600' }}>
-                  {isSubmitting ? 'Criando Conta...' : '[ CRIAR CONTA ]'}
+                  {isSubmitting ? 'Criando Conta...' : 'CRIAR CONTA'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -215,7 +213,7 @@ export default function Register() {
               Já tem conta?{' '}
               <Text
                 style={RegisterStyles.linkBold}
-                onPress={() => setLocation('/login')}
+                onPress={onMudarTela}
               >
                 Fazer login
               </Text>
