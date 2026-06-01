@@ -6,12 +6,12 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  Button,
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { LoginStyles } from "../styles/LoginStyle";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigation } from "@react-navigation/native";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido").min(1, "Email é obrigatório"),
@@ -22,9 +22,10 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 interface NavegarParaRegister {
   onMudarTela: () => void;
+  onVoltarParaHome: () => void;
 }
 
-export default function Login({ onMudarTela}: NavegarParaRegister) {
+export default function Login({ onMudarTela, onVoltarParaHome}: NavegarParaRegister) {
   const [apiError, setApiError] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -59,6 +60,9 @@ export default function Login({ onMudarTela}: NavegarParaRegister) {
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
       >
+        <TouchableOpacity style={LoginStyles.botaoVoltar} onPress={onVoltarParaHome}>
+          <Text style={LoginStyles.textoBotaoVoltar}> Voltar para Home</Text>
+        </TouchableOpacity>
         <View style={LoginStyles.formWrapper}>
           {/* Header */}
           <View style={LoginStyles.header}>

@@ -17,13 +17,16 @@ import Home from './src/screens/Home';
 
 const Tab = createBottomTabNavigator();
 
-
 export function PerfilNavigation() {
-  const [telaAtual, setTelaAtual] = useState<'login' | 'register'>('login')
-  if (telaAtual === 'login') {
-    return <Login onMudarTela={() => setTelaAtual('register')}/>
+  const [telaAtual, setTelaAtual] = useState<'login' | 'register' | 'home'>('login')
+  if (telaAtual === 'home') {
+    return <Home onMudarTelaParaLogin={() => setTelaAtual('login')} onMudarTelaParaRegister={() => setTelaAtual('register')}/>
+    
   }
-  return <Register onMudarTela={() => setTelaAtual('login')}/>
+  if (telaAtual === 'login') {
+    return <Login onMudarTela={() => setTelaAtual('register')} onVoltarParaHome={() => setTelaAtual('home')}/>
+  }
+  return <Register onMudarTela={() => setTelaAtual('login')} onVoltarHome={() => setTelaAtual('home')}/>
 }
 
 interface HeaderDateProps {
@@ -61,7 +64,7 @@ function App() {
             ...tabOptions,
           }}
           >
-            <Tab.Screen name="Home" component={Home} options={{
+            <Tab.Screen name="Home" component={PerfilNavigation} options={{
               tabBarIcon: ({ color, size }: any) => (
                 <House color={color} size={size} />
               )

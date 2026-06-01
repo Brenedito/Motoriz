@@ -11,7 +11,7 @@ export const HomeStyles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#1f2f42',
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
   },
   logo: {

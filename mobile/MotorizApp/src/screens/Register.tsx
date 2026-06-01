@@ -22,9 +22,10 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 interface NavegarParaLogin {
   onMudarTela: () => void;
+  onVoltarHome: () => void;
 }
 
-export default function Register({ onMudarTela}: NavegarParaLogin) {
+export default function Register({ onMudarTela, onVoltarHome}: NavegarParaLogin) {
   const [apiError, setApiError] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -68,7 +69,10 @@ export default function Register({ onMudarTela}: NavegarParaLogin) {
 
   return (
     <View style={RegisterStyles.container}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-start' }}>
+        <TouchableOpacity style={RegisterStyles.botaoVoltar} onPress={onVoltarHome}>
+          <Text style={RegisterStyles.textoBotaoVoltar}> Voltar para Home</Text>
+        </TouchableOpacity>
         <View style={RegisterStyles.formWrapper}>
           {/* Header */}
           <View style={RegisterStyles.header}>

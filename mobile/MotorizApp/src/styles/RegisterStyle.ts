@@ -8,6 +8,18 @@ export const RegisterStyles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 32,
   },
+  botaoVoltar: {
+    alignSelf: 'flex-start',
+    marginTop: 0,
+    marginBottom: 20,
+    paddingVertical: 5,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+  },
+  textoBotaoVoltar: {
+    color: '#fff',
+    fontSize: 16,
+  },
   formWrapper: {
     width: '100%',
   },

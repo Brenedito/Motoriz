@@ -98,25 +98,51 @@ export const styles = StyleSheet.create({
     fontSize: 13,
   },
   statusEBotaoFevolucao: {
-    alignItems: "flex-end",
-    justifyContent: "center",
-    gap: 8,
+    flexDirection: 'column',
+    alignItems: 'flex-end',
   },
   statusPagamento: {
     color: "#F97316",
-    fontWeight: "bold",
+    fontWeight: "600",
     fontSize: 13,
+    alignItems: 'flex-end',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
   },
   botaoFinalizarDevolucao: {
-    backgroundColor: "#1e2d52",
+    backgroundColor: "#334155",
+    marginTop: 27,
+    gap: 3,
     borderWidth: 1,
-    borderColor: "#0d3468",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6
+    borderColor: 'transparent',
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    borderRadius: 8
   },
   textoBotaoFinalizar: {
     color: "#E6EDF3",
-    fontWeight: "600"
-  }
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  statusPendente: {
+    color: "#F97316",
+    backgroundColor: '#f59e0b26',
+  },
+  statusPago: {
+    color: "#22C55E",
+    backgroundColor: '#22c55e26',
+  },
+  statusAtrasado: {
+    color: "#EF4444",
+    backgroundColor: '#ef444426',
+  },
+  statusRecusado: {
+    color: "#EF4444",
+    backgroundColor: '#ef444426',
+  },
+  statusCancelado: {
+    color: "#EF4444",
+    backgroundColor: '#ef444426',
+  },
 });
