@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  Button,
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
@@ -19,7 +20,12 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function Login() {
+interface NavegarParaRegister {
+  onMudarTela: () => void;
+  onVoltarParaHome: () => void;
+}
+
+export default function Login({ onMudarTela, onVoltarParaHome}: NavegarParaRegister) {
   const [apiError, setApiError] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -54,6 +60,9 @@ export default function Login() {
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
       >
+        <TouchableOpacity style={LoginStyles.botaoVoltar} onPress={onVoltarParaHome}>
+          <Text style={LoginStyles.textoBotaoVoltar}> Voltar para Home</Text>
+        </TouchableOpacity>
         <View style={LoginStyles.formWrapper}>
           {/* Header */}
           <View style={LoginStyles.header}>
@@ -164,7 +173,7 @@ export default function Login() {
                     fontWeight: "600",
                   }}
                 >
-                  {isSubmitting ? "Autenticando..." : "[ ACESSAR SISTEMA ]"}
+                  {isSubmitting ? "Autenticando..." : "ACESSAR SISTEMA"}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -181,7 +190,7 @@ export default function Login() {
               Não tem conta?{" "}
               <Text
                 style={LoginStyles.linkBold}
-                onPress={() => Alert.alert("Registrar", "Funcionalidade de registro ainda não implementada")}
+                onPress={onMudarTela}
               >
                 Criar conta
               </Text>

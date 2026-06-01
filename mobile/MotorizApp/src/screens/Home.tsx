@@ -3,22 +3,18 @@ import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { useLocation } from "wouter";
 import { HomeStyles } from '../styles/HomeStyle';
 
-export default function Home() {
-  const [, setLocation] = useLocation();
+interface NavegarParaRegisterELogin {
+  onMudarTelaParaRegister: () => void;
+  onMudarTelaParaLogin: () => void;
+}
+
+export default function Home({onMudarTelaParaLogin, onMudarTelaParaRegister}: NavegarParaRegisterELogin) {
 
   return (
     <View style={HomeStyles.container}>
       {/* Header */}
       <View style={HomeStyles.header}>
         <Text style={HomeStyles.logo}>MOTORIZ</Text>
-        <View style={HomeStyles.headerButtons}>
-          <TouchableOpacity onPress={() => setLocation("/login")}>
-            <Text style={{ color: '#fff', fontSize: 14 }}>Login</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setLocation("/register")}>
-            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>Cadastro</Text>
-          </TouchableOpacity>
-        </View>
       </View>
 
       {/* Main Content */}
@@ -31,14 +27,6 @@ export default function Home() {
           <Text style={HomeStyles.heroDescription}>
             Plataforma premium de gestão para locadora de carros. Acesso seguro, interface intuitiva e controle total da sua frota.
           </Text>
-          <View style={HomeStyles.buttonContainer}>
-            <TouchableOpacity onPress={() => setLocation("/login")}>
-              <Text style={{ color: '#fff', fontWeight: '600' }}>[ ACESSAR SISTEMA ]</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setLocation("/register")}>
-              <Text style={{ color: '#fff', fontWeight: '600' }}>[ CRIAR CONTA ]</Text>
-            </TouchableOpacity>
-          </View>
         </View>
 
         {/* Features Section */}
@@ -72,18 +60,24 @@ export default function Home() {
           <Text style={HomeStyles.ctaDescription}>
             Crie sua conta agora e acesse o painel de controle completo da sua locadora de carros.
           </Text>
-          <TouchableOpacity onPress={() => setLocation("/register")}>
-            <Text style={{ color: '#fff', fontWeight: '600' }}>[ CRIAR CONTA AGORA ]</Text>
+          <View style={{ flexDirection: 'row', gap: 16, marginTop: 16 }}>
+            <TouchableOpacity onPress={onMudarTelaParaRegister}>
+            <Text style={{ color: '#fff', fontWeight: '600' }}>CRIAR CONTA AGORA</Text>
           </TouchableOpacity>
+          <TouchableOpacity onPress={onMudarTelaParaLogin}>
+              <Text style={{ color: '#fff', fontWeight: '600' }}>ENTRAR</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </ScrollView>
-
-      {/* Footer */}
+        {/* Footer */}
       <View style={HomeStyles.footer}>
         <Text style={HomeStyles.footerText}>&gt; MOTORIZ_HOME_v2.0.1</Text>
         <Text style={HomeStyles.footerText}>&gt; STATUS: ONLINE</Text>
         <Text style={HomeStyles.footerText}>© 2026 MOTORIZ - Sistema de Autenticação Premium</Text>
       </View>
+      </ScrollView>
+
+      
     </View>
   );
 }

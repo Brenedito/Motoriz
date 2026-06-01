@@ -168,10 +168,11 @@ export const styles = StyleSheet.create({
   },
   statusEBotaoLocalizar: {
     flexDirection: 'column',
-    alignItems: 'center',
+    alignItems: 'flex-end',
   },
   veiculosStatus: {
-    fontSize: 12,
+    fontSize: 13,
+    alignItems: 'flex-end',
     fontWeight: '600',
     color: '#22C55E',
     backgroundColor: '#22c55e26',
@@ -184,14 +185,15 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 27,
     backgroundColor: '#334155',
-    width: 100,
+    borderWidth: 1,
+    borderColor: 'transparent',
     gap: 3,
     paddingHorizontal: 5,
-    paddingVertical: 3,
+    paddingVertical: 4,
     borderRadius: 8,
   },
   textLocalizar: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#E6EDF3',
   },
   footerVerMaisVeiculos: {

@@ -8,23 +8,7 @@ import {
 } from "react-native";
 import { styles } from "../styles/DocumentosStyle";
 import { useMemo, useState } from "react";
-
-type statusPagamento =
-  | "PENDENTE"
-  | "PAGO"
-  | "ATRASADO"
-  | "RECUSADO"
-  | "CANCELADO";
-
-interface ContratoDoVeiculo {
-  id: string;
-  modelo: string;
-  placa: string;
-  valor: number;
-  statusPagamento: statusPagamento;
-  vencimento: string;
-  cliente: string;
-}
+import { ContratoDoVeiculo, statusPagamento } from "../@types/ContratoDoVeiculo";
 
 interface StatusConfig {
   label: string;
@@ -57,6 +41,14 @@ export function Documentos() {
     [],
   );
 
+  const STATUS_STYLES: Record<statusPagamento, StatusConfig> = {
+    PENDENTE: {label: "Pendente", style: styles.statusPendente},
+    PAGO: {label: "Pago", style: styles.statusPago},
+    ATRASADO: {label: "Atrasado", style: styles.statusAtrasado},
+    RECUSADO: {label: "Recusado", style: styles.statusRecusado},
+    CANCELADO: {label: "Cancelado", style: styles.statusCancelado}
+  }
+
   const numeroDeContratos = useMemo(() => {
     const totalContratos = contratosExemplo.length;
     return totalContratos;
@@ -81,6 +73,7 @@ export function Documentos() {
             data={contratosExemplo}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => {
+              const status = STATUS_STYLES[item.statusPagamento];
               return (
                 <View style={styles.listaDeContratosCard}>
                   <View style={styles.contratosInfo}>
@@ -97,8 +90,8 @@ export function Documentos() {
                     </View>
                   </View>
                   <View style={styles.statusEBotaoFevolucao}>
-                    <Text style={styles.statusPagamento}>
-                      {item.statusPagamento}
+                    <Text style={[styles.statusPagamento, status.style]}>
+                      {status.label}
                     </Text>
                     <TouchableOpacity style={styles.botaoFinalizarDevolucao}>
                       <Text style={styles.textoBotaoFinalizar}>Finalizar Devolução</Text>

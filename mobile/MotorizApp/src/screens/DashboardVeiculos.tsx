@@ -169,7 +169,7 @@ export function DashboardVeiculos() {
             data={veiculos}
             keyExtractor={item => item.id.toString()}
             renderItem={({ item }) => {
-              const config = STATUS_CFG[item.status];
+              const status = STATUS_CFG[item.status];
               return (
                 <View style={styles.veiculosCard}>
                   <View style={styles.veiculosInfo}>
@@ -180,8 +180,8 @@ export function DashboardVeiculos() {
                     </Text>
                   </View>
                   <View style={styles.statusEBotaoLocalizar}>
-                    <Text style={[styles.veiculosStatus, config.style]}>
-                      {config.label}
+                    <Text style={[styles.veiculosStatus, status.style]}>
+                      {status.label}
                     </Text>
                     <TouchableOpacity style={styles.botaoLocalizar}>
                       <MapPin size={17} color={'#E6EDF3'}/>

@@ -8,6 +8,17 @@ export const LoginStyles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 32,
   },
+  botaoVoltar: {
+    position: 'absolute',
+    top: -12,
+    paddingVertical: 5,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+  },
+  textoBotaoVoltar: {
+    color: '#fff',
+    fontSize: 16,
+  },
   formWrapper: {
     width: '100%',
   },
