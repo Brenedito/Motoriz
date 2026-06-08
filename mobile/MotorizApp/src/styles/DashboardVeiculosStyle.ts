@@ -10,10 +10,9 @@ export const styles = StyleSheet.create({
     padding: 16,
   },
   headerTitle: {
-    marginTop: 8,
+    color: "#fff",
     fontSize: 22,
-    fontWeight: '800',
-    color: '#fff',
+    fontWeight: "800",
     marginBottom: 16,
   },
   containerInfos: {
