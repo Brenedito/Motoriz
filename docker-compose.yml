@@ -1,0 +1,28 @@
+services:
+  mysql:
+    image: mysql:8.4
+    command:
+      - --log-bin-trust-function-creators=1
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: root_dev
+      MYSQL_DATABASE: motoriz
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_dados:/var/lib/mysql
+      - ./infra/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address :9001
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_dados:/data
+
+volumes:
+  mysql_dados:
+  minio_dados:
