@@ -7,12 +7,13 @@ from uuid import UUID
 import pytest
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import Engine
+from sqlalchemy import Engine, text
 from sqlalchemy.orm import Session
 from testcontainers.community.mysql import MySqlContainer
 
 from motoriz.compartilhado.documento import Documento
 from motoriz.compartilhado.ids import novo_id
+from motoriz.compartilhado.relogio import RelogioFixo
 from motoriz.contas.adaptadores.orm import LocadoraOrm, UsuarioOrm
 from motoriz.contas.adaptadores.repositorios import RepositorioLocadorasSql
 from motoriz.contas.dominio.locadora import Locadora
@@ -135,3 +136,28 @@ def locadora_gravada(sessao: Session) -> Locadora:
     RepositorioLocadorasSql(sessao).adicionar(loc)
     sessao.info.clear()
     return loc
+
+
+# --- Auditoria --------------------------------------------------------------------------------
+
+
+@pytest.fixture
+def relogio_fixo() -> RelogioFixo:
+    return RelogioFixo(datetime(2026, 11, 24, 12, 0, tzinfo=UTC))
+
+
+@pytest.fixture
+def registro_gravado(motor_migracao: Engine) -> UUID:
+    """Grava um registro com id único e não limpa depois: a tabela é imutável por definição."""
+    id_ = novo_id()
+    with motor_migracao.begin() as conexao:
+        conexao.execute(
+            text(
+                "INSERT INTO registro_acao (id, conta_id, usuario_id, origem, acao, entidade, "
+                "entidade_id, antes, depois, registrado_em) "
+                "VALUES (:id, NULL, NULL, 'sistema', 'teste.gravado', 'teste', :alvo, "
+                "NULL, NULL, '2026-11-24 12:00:00.000000')"
+            ),
+            {"id": id_.bytes, "alvo": novo_id().bytes},
+        )
+    return id_
