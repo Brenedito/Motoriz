@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from motoriz.compartilhado.contexto import Papel
 from motoriz.compartilhado.documento import Documento
 from motoriz.compartilhado.email import Email
+from motoriz.compartilhado.ids import novo_id
 from motoriz.compartilhado.relogio import RelogioFixo
 from motoriz.contas.adaptadores.orm import LocadoraOrm, SessaoOrm, UsuarioOrm
 from motoriz.contas.adaptadores.repositorios import (
@@ -238,6 +239,26 @@ def test_revogar_do_usuario_deixa_objetos_carregados_legiveis(sessao, usuario_gr
     repo.revogar_do_usuario(usuario_gravado.id, quando)
     assert [s.revogada_em for s in carregadas] == [quando, quando]
     assert {s.usuario_id for s in carregadas} == {usuario_gravado.id}
+
+
+def test_revogar_do_usuario_poupa_a_sessao_excecao(sessao, usuario_gravado):
+    repo = RepositorioSessoesSql(sessao)
+    atual, _ = Sessao.emitir(usuario_gravado.conta_id, usuario_gravado.id, AGORA)
+    outra, _ = Sessao.emitir(usuario_gravado.conta_id, usuario_gravado.id, AGORA)
+    repo.adicionar(atual)
+    repo.adicionar(outra)
+    quando = AGORA + timedelta(minutes=5)
+    repo.revogar_do_usuario(usuario_gravado.id, quando, exceto_hash=atual.token_hash)
+    assert repo.obter_por_hash_em_todas_as_contas(atual.token_hash).revogada_em is None
+    assert repo.obter_por_hash_em_todas_as_contas(outra.token_hash).revogada_em == quando
+
+
+def test_obter_usuario_em_todas_as_contas_sem_conta_definida(sessao, duas_contas):
+    a, b = duas_contas
+    repo = RepositorioUsuariosSql(sessao)
+    assert repo.obter_em_todas_as_contas(a.usuario_id).conta_id == a.conta_id
+    assert repo.obter_em_todas_as_contas(b.usuario_id).conta_id == b.conta_id
+    assert repo.obter_em_todas_as_contas(novo_id()) is None
 
 
 def test_plataforma_le_locadora_e_usuarios(sessao, duas_contas):

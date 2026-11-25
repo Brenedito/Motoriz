@@ -24,6 +24,10 @@ class RepositorioUsuarios(Protocol):
         """Só encontra usuários da conta da sessão."""
         ...
 
+    def obter_em_todas_as_contas(self, id: UUID) -> Usuario | None:
+        """Para quando a conta ainda não é conhecida (resolver a sessão)."""
+        ...
+
     def obter_por_email_em_todas_as_contas(self, email: Email) -> Usuario | None: ...
 
     def email_em_uso(self, email: Email) -> bool:
@@ -48,7 +52,11 @@ class RepositorioSessoes(Protocol):
 
     def salvar(self, s: Sessao) -> None: ...
 
-    def revogar_do_usuario(self, usuario_id: UUID, agora: datetime) -> None: ...
+    def revogar_do_usuario(
+        self, usuario_id: UUID, agora: datetime, exceto_hash: str | None = None
+    ) -> None:
+        """Revoga as sessões abertas do usuário, poupando a de `exceto_hash`, se dada."""
+        ...
 
 
 class HasherDeSenha(Protocol):

@@ -59,6 +59,9 @@ forbidden_modules = ["fastapi", "sqlalchemy", "pydantic"]
 name = "Contas não importa o interior de auditoria"
 type = "forbidden"
 source_modules = ["motoriz.contas"]
+# Só o import direto é proibido: passar por `motoriz.auditoria.api` (que por sua vez importa o
+# interior) é o caminho permitido.
+allow_indirect_imports = true
 forbidden_modules = [
     "motoriz.auditoria.dominio",
     "motoriz.auditoria.aplicacao",

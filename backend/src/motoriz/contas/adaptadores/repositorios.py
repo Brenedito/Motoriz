@@ -107,6 +107,11 @@ class RepositorioUsuariosSql:
         orm = self._orm(id)
         return None if orm is None else _usuario(orm)
 
+    def obter_em_todas_as_contas(self, id: UUID) -> Usuario | None:
+        stmt = select(UsuarioOrm).where(UsuarioOrm.id == id).execution_options(**_TODAS_AS_CONTAS)
+        orm = self._sessao.scalars(stmt).one_or_none()
+        return None if orm is None else _usuario(orm)
+
     def obter_por_email_em_todas_as_contas(self, email: Email) -> Usuario | None:
         stmt = (
             select(UsuarioOrm)
@@ -217,10 +222,15 @@ class RepositorioSessoesSql:
         orm.revogada_em = s.revogada_em
         self._sessao.flush()
 
-    def revogar_do_usuario(self, usuario_id: UUID, agora: datetime) -> None:
+    def revogar_do_usuario(
+        self, usuario_id: UUID, agora: datetime, exceto_hash: str | None = None
+    ) -> None:
+        condicoes = [SessaoOrm.usuario_id == usuario_id, SessaoOrm.revogada_em.is_(None)]
+        if exceto_hash is not None:
+            condicoes.append(SessaoOrm.token_hash != exceto_hash)
         stmt = (
             update(SessaoOrm)
-            .where(SessaoOrm.usuario_id == usuario_id, SessaoOrm.revogada_em.is_(None))
+            .where(*condicoes)
             .values(revogada_em=agora)
             # "fetch" montaria um SELECT interno com colunas Core, que o filtro de conta recusa;
             # em vez disso, expiramos as sessões já carregadas desse usuário.
