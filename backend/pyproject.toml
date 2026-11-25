@@ -48,7 +48,11 @@ layers = ["adaptadores", "aplicacao", "dominio"]
 [[tool.importlinter.contracts]]
 name = "Domínio não importa framework"
 type = "forbidden"
-source_modules = ["motoriz.contas.dominio", "motoriz.auditoria.dominio"]
+source_modules = [
+    "motoriz.compartilhado",
+    "motoriz.contas.dominio",
+    "motoriz.auditoria.dominio",
+]
 forbidden_modules = ["fastapi", "sqlalchemy", "pydantic"]
 
 [[tool.importlinter.contracts]]
