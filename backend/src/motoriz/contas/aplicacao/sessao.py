@@ -1,3 +1,4 @@
+import secrets
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -40,6 +41,8 @@ class Entrar:
         self._hasher = hasher
         self._relogio = relogio
         self._auditoria = auditoria
+        # Hash com o custo real do hasher, para gastar o mesmo tempo quando o e-mail não existe.
+        self._hash_ficticio = hasher.gerar(secrets.token_urlsafe(16))
 
     def executar(self, email: str, senha: str) -> SessaoEmitida:
         # Toda recusa é a mesma exceção, com a mesma mensagem: quem tenta não descobre qual
@@ -51,7 +54,10 @@ class Entrar:
         except EmailInvalido:
             raise CredenciaisInvalidas from None
         usuario = self._usuarios.obter_por_email_em_todas_as_contas(endereco)
-        if usuario is None or not self._hasher.verificar(senha, usuario.hash_senha):
+        if usuario is None:
+            self._hasher.verificar(senha, self._hash_ficticio)
+            raise CredenciaisInvalidas
+        if not self._hasher.verificar(senha, usuario.hash_senha):
             raise CredenciaisInvalidas
         locadora = self._locadoras.obter(usuario.conta_id)
         if not usuario.ativo or locadora is None or not locadora.ativa:

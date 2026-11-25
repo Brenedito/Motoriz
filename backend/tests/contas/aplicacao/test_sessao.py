@@ -40,6 +40,21 @@ def test_entrar_falha_com_mesma_mensagem(cenario, email, senha):
     assert cenario.auditoria.registros == []
 
 
+def test_entrar_email_desconhecido_gasta_o_mesmo_hash(cenario):
+    # Mesmo custo de Argon2 que um e-mail existente: o tempo não revela quem tem conta.
+    antes = cenario.hasher.chamadas_verificar
+    with pytest.raises(CredenciaisInvalidas, match="E-mail ou senha incorretos."):
+        cenario.entrar.executar("ninguem@x.com", SENHA)
+    assert cenario.hasher.chamadas_verificar - antes == 1
+
+
+def test_entrar_email_malformado_nao_chama_hasher(cenario):
+    antes = cenario.hasher.chamadas_verificar
+    with pytest.raises(CredenciaisInvalidas):
+        cenario.entrar.executar("nao-e-email", SENHA)
+    assert cenario.hasher.chamadas_verificar == antes
+
+
 def test_entrar_senha_gigante_nao_chama_hasher(cenario):
     with pytest.raises(CredenciaisInvalidas, match="E-mail ou senha incorretos."):
         cenario.entrar.executar(EMAIL, "x" * 129)
@@ -98,6 +113,20 @@ def test_resolver_sessao_expirada_falha(cenario):
 def test_resolver_sessao_revogada_falha(cenario):
     token = cenario.entrar.executar(EMAIL, SENHA).token
     cenario.sair.executar(token)
+    with pytest.raises(SessaoInvalida):
+        cenario.resolver.executar(token)
+
+
+def test_resolver_sessao_de_usuario_inexistente_falha(cenario):
+    token = cenario.entrar.executar(EMAIL, SENHA).token
+    del cenario.banco.usuarios[cenario.ana.id]
+    with pytest.raises(SessaoInvalida):
+        cenario.resolver.executar(token)
+
+
+def test_resolver_sessao_de_locadora_inexistente_falha(cenario):
+    token = cenario.entrar.executar(EMAIL, SENHA).token
+    del cenario.banco.locadoras[cenario.locadora.id]
     with pytest.raises(SessaoInvalida):
         cenario.resolver.executar(token)
 
