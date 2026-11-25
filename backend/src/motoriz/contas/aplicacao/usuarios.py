@@ -5,7 +5,12 @@ from motoriz.compartilhado.contexto import ContextoConta, Papel, exigir_papel
 from motoriz.compartilhado.email import Email
 from motoriz.compartilhado.erros import NaoEncontrado
 from motoriz.compartilhado.relogio import Relogio
-from motoriz.contas.aplicacao.portas import HasherDeSenha, RepositorioSessoes, RepositorioUsuarios
+from motoriz.contas.aplicacao.portas import (
+    HasherDeSenha,
+    RepositorioLocadoras,
+    RepositorioSessoes,
+    RepositorioUsuarios,
+)
 from motoriz.contas.dominio.erros import EmailJaCadastrado
 from motoriz.contas.dominio.senha import validar_senha
 from motoriz.contas.dominio.usuario import Usuario, verificar_pode_desativar
@@ -60,11 +65,13 @@ class DesativarUsuario:
     def __init__(
         self,
         *,
+        locadoras: RepositorioLocadoras,
         usuarios: RepositorioUsuarios,
         sessoes: RepositorioSessoes,
         relogio: Relogio,
         auditoria: RegistradorDeAcoes,
     ) -> None:
+        self._locadoras = locadoras
         self._usuarios = usuarios
         self._sessoes = sessoes
         self._relogio = relogio
@@ -72,10 +79,16 @@ class DesativarUsuario:
 
     def executar(self, contexto: ContextoConta, usuario_id: UUID) -> None:
         exigir_papel(contexto, Papel.ADMIN)
-        alvo = self._usuarios.obter(usuario_id)
+        # Uma desativação por vez na conta: sem isso, dois admins que se desativam ao mesmo
+        # tempo contariam dois admins ativos cada um, e a conta ficaria sem nenhum.
+        self._locadoras.bloquear(contexto.conta_id)
+        alvo = self._usuarios.obter(usuario_id, para_alterar=True)
         if alvo is None:
             raise NaoEncontrado("Usuário não encontrado")
+        if not alvo.ativo:
+            return  # já está desativado: nada muda, e a trilha não ganha registro falso
         verificar_pode_desativar(alvo, contexto.usuario_id, self._usuarios.contar_admins_ativos())
+        antes = {"ativo": alvo.ativo}
         alvo.desativar()
         self._usuarios.salvar(alvo)
         self._sessoes.revogar_do_usuario(alvo.id, self._relogio.agora())
@@ -84,8 +97,8 @@ class DesativarUsuario:
             "usuario.desativado",
             "usuario",
             alvo.id,
-            antes={"ativo": True},
-            depois={"ativo": False},
+            antes=antes,
+            depois={"ativo": alvo.ativo},
         )
 
 
@@ -96,9 +109,12 @@ class ReativarUsuario:
 
     def executar(self, contexto: ContextoConta, usuario_id: UUID) -> None:
         exigir_papel(contexto, Papel.ADMIN)
-        alvo = self._usuarios.obter(usuario_id)
+        alvo = self._usuarios.obter(usuario_id, para_alterar=True)
         if alvo is None:
             raise NaoEncontrado("Usuário não encontrado")
+        if alvo.ativo:
+            return  # já está ativo: nada muda, e a trilha não ganha registro falso
+        antes = {"ativo": alvo.ativo}
         alvo.reativar()
         self._usuarios.salvar(alvo)
         self._auditoria.registrar(
@@ -106,6 +122,6 @@ class ReativarUsuario:
             "usuario.reativado",
             "usuario",
             alvo.id,
-            antes={"ativo": False},
-            depois={"ativo": True},
+            antes=antes,
+            depois={"ativo": alvo.ativo},
         )

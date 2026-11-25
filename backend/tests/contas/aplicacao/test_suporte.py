@@ -38,7 +38,12 @@ def test_criar_locadora_audita_como_suporte(cenario_vazio):
     for reg in (criada, usuario):
         assert (reg.conta_id, reg.usuario_id, reg.origem) == (r.locadora.id, None, "suporte")
     assert (criada.entidade, criada.entidade_id) == ("locadora", r.locadora.id)
-    assert criada.depois == {"nome": "Loca Sul", "documento": "11222333000181", "situacao": "ativa"}
+    assert criada.depois == {
+        "nome": "Loca Sul",
+        "documento": "11222333000181",
+        "contato": "[dado pessoal]",
+        "situacao": "ativa",
+    }
     assert (usuario.entidade, usuario.entidade_id) == ("usuario", r.admin.id)
     assert usuario.depois == {
         "nome": "[dado pessoal]",
@@ -93,3 +98,59 @@ def test_suspender_locadora_inexistente(cenario_vazio):
 def test_reativar_locadora_inexistente(cenario_vazio):
     with pytest.raises(NaoEncontrado, match="Locadora não encontrada"):
         cenario_vazio.reativar.executar(DOC)
+
+
+# --- Transições repetidas: sem efeito e sem registro falso na trilha -------------------------
+
+
+def test_suspender_locadora_ja_suspensa_nao_audita(cenario_vazio):
+    r = _criar(cenario_vazio)
+    cenario_vazio.suspender.executar(DOC)
+    registros = len(cenario_vazio.auditoria.registros)
+    cenario_vazio.suspender.executar(DOC)
+    assert len(cenario_vazio.auditoria.registros) == registros
+    assert cenario_vazio.locadoras.obter(r.locadora.id).situacao is SituacaoLocadora.SUSPENSA
+
+
+def test_reativar_locadora_ja_ativa_nao_audita(cenario_vazio):
+    _criar(cenario_vazio)
+    registros = len(cenario_vazio.auditoria.registros)
+    cenario_vazio.reativar.executar(DOC)
+    assert len(cenario_vazio.auditoria.registros) == registros
+
+
+def test_suspender_e_reativar_auditam_a_situacao_real(cenario_vazio):
+    _criar(cenario_vazio)
+    cenario_vazio.suspender.executar(DOC)
+    s = cenario_vazio.auditoria.registros[-1]
+    assert (s.antes, s.depois) == ({"situacao": "ativa"}, {"situacao": "suspensa"})
+    cenario_vazio.reativar.executar(DOC)
+    r = cenario_vazio.auditoria.registros[-1]
+    assert (r.antes, r.depois) == ({"situacao": "suspensa"}, {"situacao": "ativa"})
+
+
+# --- Dado pessoal na trilha da locadora --------------------------------------------------------
+
+
+def test_locadora_pessoa_fisica_audita_sem_dado_pessoal(cenario_vazio):
+    r = _criar(cenario_vazio, documento="529.982.247-25")
+    criada = cenario_vazio.auditoria.registros[0]
+    assert criada.acao == "locadora.criada"
+    assert criada.depois == {
+        "nome": "[dado pessoal]",
+        "documento": "[dado pessoal]",
+        "contato": "[dado pessoal]",
+        "situacao": "ativa",
+    }
+    assert r.locadora.documento.valor not in repr(cenario_vazio.auditoria.registros)
+
+
+def test_locadora_pessoa_juridica_mascara_so_o_contato(cenario_vazio):
+    _criar(cenario_vazio)
+    criada = cenario_vazio.auditoria.registros[0]
+    assert criada.depois == {
+        "nome": "Loca Sul",
+        "documento": "11222333000181",
+        "contato": "[dado pessoal]",
+        "situacao": "ativa",
+    }

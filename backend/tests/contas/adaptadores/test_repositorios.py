@@ -1,12 +1,14 @@
 from datetime import UTC, datetime, timedelta
 
 import pytest
-from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import create_engine, select, text
+from sqlalchemy.exc import IntegrityError, OperationalError
+from sqlalchemy.pool import NullPool
 
 from motoriz.compartilhado.contexto import Papel
 from motoriz.compartilhado.documento import Documento
 from motoriz.compartilhado.email import Email
+from motoriz.compartilhado.erros import NaoEncontrado
 from motoriz.compartilhado.ids import novo_id
 from motoriz.compartilhado.relogio import RelogioFixo
 from motoriz.contas.adaptadores.orm import LocadoraOrm, SessaoOrm, UsuarioOrm
@@ -18,6 +20,7 @@ from motoriz.contas.adaptadores.repositorios import (
 from motoriz.contas.dominio.locadora import Locadora, SituacaoLocadora
 from motoriz.contas.dominio.sessao import Sessao
 from motoriz.contas.dominio.usuario import Usuario
+from motoriz.infra.banco import criar_fabrica
 from motoriz.infra.conta import definir_conta, modo_plataforma
 
 pytestmark = pytest.mark.banco
@@ -63,6 +66,34 @@ def test_documento_de_locadora_e_unico(sessao, locadora_gravada):
     repo = RepositorioLocadorasSql(sessao)
     with pytest.raises(IntegrityError):
         repo.adicionar(Locadora.nova("Outra", locadora_gravada.documento, "o@o.com"))
+
+
+def test_bloquear_locadora_segura_a_linha_ate_o_fim_da_transacao(motor_app, conta_a):
+    # Duas conexões de verdade (sem pool, para o tempo de espera curto não vazar para outros
+    # testes): enquanto a primeira segura o bloqueio, a segunda não o obtém.
+    motor = create_engine(motor_app.url, poolclass=NullPool)
+    fabrica = criar_fabrica(motor)
+    try:
+        with fabrica() as primeira, fabrica() as segunda:
+            modo_plataforma(primeira)
+            modo_plataforma(segunda)
+            RepositorioLocadorasSql(primeira).bloquear(conta_a.conta_id)
+            segunda.execute(text("SET SESSION innodb_lock_wait_timeout = 1"))
+            with pytest.raises(OperationalError):
+                RepositorioLocadorasSql(segunda).bloquear(conta_a.conta_id)
+            segunda.rollback()
+            primeira.rollback()
+            # Solto o bloqueio, a segunda consegue.
+            modo_plataforma(segunda)
+            RepositorioLocadorasSql(segunda).bloquear(conta_a.conta_id)
+            segunda.rollback()
+    finally:
+        motor.dispose()
+
+
+def test_bloquear_locadora_inexistente(sessao):
+    with pytest.raises(NaoEncontrado, match="Locadora não encontrada"):
+        RepositorioLocadorasSql(sessao).bloquear(novo_id())
 
 
 # --- Usuários --------------------------------------------------------------------------------

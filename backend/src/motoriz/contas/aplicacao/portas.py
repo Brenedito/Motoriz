@@ -14,14 +14,26 @@ class RepositorioLocadoras(Protocol):
 
     def obter_por_documento(self, doc: Documento) -> Locadora | None: ...
 
+    def bloquear(self, id: UUID) -> None:
+        """Segura a locadora até o fim da transação, serializando as mudanças na conta.
+
+        Quem chega depois espera. Use antes de conferir uma regra que vale para a conta inteira
+        (como "ao menos um admin ativo"), para duas requisições não a conferirem ao mesmo tempo.
+        """
+        ...
+
     def adicionar(self, loc: Locadora) -> None: ...
 
     def salvar(self, loc: Locadora) -> None: ...
 
 
 class RepositorioUsuarios(Protocol):
-    def obter(self, id: UUID) -> Usuario | None:
-        """Só encontra usuários da conta da sessão."""
+    def obter(self, id: UUID, *, para_alterar: bool = False) -> Usuario | None:
+        """Só encontra usuários da conta da sessão.
+
+        Com `para_alterar`, lê o último estado gravado e segura o usuário até o fim da
+        transação, para uma mudança concorrente não se basear em leitura velha.
+        """
         ...
 
     def obter_em_todas_as_contas(self, id: UUID) -> Usuario | None:
@@ -38,7 +50,9 @@ class RepositorioUsuarios(Protocol):
         """Usuários da conta, ordenados por nome."""
         ...
 
-    def contar_admins_ativos(self) -> int: ...
+    def contar_admins_ativos(self) -> int:
+        """Conta pelo último estado gravado (não por uma foto antiga da transação)."""
+        ...
 
     def adicionar(self, u: Usuario) -> None: ...
 

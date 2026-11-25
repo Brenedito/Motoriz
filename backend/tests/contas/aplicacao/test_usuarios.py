@@ -125,3 +125,28 @@ def test_reativar_usuario_de_outra_conta_e_nao_encontrado(cenario):
 def test_operador_nao_reativa(cenario):
     with pytest.raises(AcessoNegado):
         cenario.reativar.executar(cenario.ctx_operador, cenario.operador.id)
+
+
+# --- Transições repetidas: sem efeito e sem registro falso na trilha -------------------------
+
+
+def test_desativar_usuario_ja_inativo_nao_audita(cenario):
+    cenario.desativar.executar(cenario.ctx_admin, cenario.operador.id)
+    registros = len(cenario.auditoria.registros)
+    cenario.desativar.executar(cenario.ctx_admin, cenario.operador.id)
+    assert len(cenario.auditoria.registros) == registros
+    assert cenario.usuarios.obter(cenario.operador.id).ativo is False
+
+
+def test_reativar_usuario_ja_ativo_nao_audita(cenario):
+    cenario.reativar.executar(cenario.ctx_admin, cenario.operador.id)
+    assert cenario.auditoria.registros == []
+    assert cenario.usuarios.obter(cenario.operador.id).ativo is True
+
+
+# --- Regra do último admin sob concorrência ----------------------------------------------------
+
+
+def test_desativar_bloqueia_a_conta_antes_de_ler(cenario):
+    cenario.desativar.executar(cenario.ctx_admin, cenario.operador.id)
+    assert cenario.locadoras.bloqueios == [cenario.locadora.id]

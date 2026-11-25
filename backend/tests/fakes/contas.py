@@ -31,9 +31,15 @@ class BancoEmMemoria:
 class LocadorasEmMemoria:
     def __init__(self, banco: BancoEmMemoria | None = None) -> None:
         self._banco = banco or BancoEmMemoria()
+        self.bloqueios: list[UUID] = []  # locadoras bloqueadas, na ordem dos pedidos
 
     def obter(self, id: UUID) -> Locadora | None:
         return copy.deepcopy(self._banco.locadoras.get(id))
+
+    def bloquear(self, id: UUID) -> None:
+        if id not in self._banco.locadoras:
+            raise NaoEncontrado("Locadora não encontrada")
+        self.bloqueios.append(id)
 
     def obter_por_documento(self, doc: Documento) -> Locadora | None:
         for loc in self._banco.locadoras.values():
@@ -68,7 +74,8 @@ class UsuariosEmMemoria:
             raise ContextoDeContaAusente("Contexto de conta ausente")
         return [u for u in self._banco.usuarios.values() if u.conta_id == self._conta_id]
 
-    def obter(self, id: UUID) -> Usuario | None:
+    def obter(self, id: UUID, *, para_alterar: bool = False) -> Usuario | None:
+        # Em memória não há foto de transação nem concorrência: `para_alterar` não muda nada.
         for u in self._da_conta():
             if u.id == id:
                 return copy.deepcopy(u)

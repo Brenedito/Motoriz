@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from sqlalchemy import func, inspect, select, update
+from sqlalchemy import inspect, select, update
 from sqlalchemy.orm import Session
 
 from motoriz.compartilhado.contexto import Papel
@@ -53,6 +53,13 @@ class RepositorioLocadorasSql:
         stmt = select(LocadoraOrm).where(LocadoraOrm.documento == doc.valor)
         orm = self._sessao.scalars(stmt).one_or_none()
         return None if orm is None else _locadora(orm)
+
+    def bloquear(self, id: UUID) -> None:
+        # SELECT ... FOR UPDATE na linha da locadora: o bloqueio dura até o commit/rollback.
+        # `locadora` não é tabela `DaConta`, então o filtro de conta não interfere.
+        stmt = select(LocadoraOrm.id).where(LocadoraOrm.id == id).with_for_update()
+        if self._sessao.scalar(stmt) is None:
+            raise NaoEncontrado("Locadora não encontrada")
 
     def adicionar(self, loc: Locadora) -> None:
         self._sessao.add(
@@ -103,8 +110,20 @@ class RepositorioUsuariosSql:
     def _orm(self, id: UUID) -> UsuarioOrm | None:
         return self._sessao.scalars(select(UsuarioOrm).where(UsuarioOrm.id == id)).one_or_none()
 
-    def obter(self, id: UUID) -> Usuario | None:
-        orm = self._orm(id)
+    def obter(self, id: UUID, *, para_alterar: bool = False) -> Usuario | None:
+        if not para_alterar:
+            orm = self._orm(id)
+            return None if orm is None else _usuario(orm)
+        # Leitura com bloqueio: no REPEATABLE READ do InnoDB ela vê o último estado gravado, e
+        # não a foto tirada no começo da transação; `populate_existing` sobrescreve o objeto que
+        # já estiver no mapa de identidade.
+        stmt = (
+            select(UsuarioOrm)
+            .where(UsuarioOrm.id == id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+        orm = self._sessao.scalars(stmt).one_or_none()
         return None if orm is None else _usuario(orm)
 
     def obter_em_todas_as_contas(self, id: UUID) -> Usuario | None:
@@ -135,12 +154,14 @@ class RepositorioUsuariosSql:
         return [_usuario(orm) for orm in self._sessao.scalars(stmt)]
 
     def contar_admins_ativos(self) -> int:
+        # Leitura com bloqueio (FOR UPDATE), pelo mesmo motivo de `obter(para_alterar=True)`:
+        # uma leitura comum devolveria a foto da transação, de antes de um commit concorrente.
         stmt = (
-            select(func.count())
-            .select_from(UsuarioOrm)
+            select(UsuarioOrm.id)
             .where(UsuarioOrm.papel == Papel.ADMIN.value, UsuarioOrm.ativo.is_(True))
+            .with_for_update()
         )
-        return self._sessao.scalar(stmt) or 0
+        return len(self._sessao.scalars(stmt).all())
 
     def adicionar(self, u: Usuario) -> None:
         self._sessao.add(

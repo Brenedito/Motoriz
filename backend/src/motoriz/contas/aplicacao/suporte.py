@@ -8,12 +8,20 @@ from motoriz.compartilhado.email import Email
 from motoriz.compartilhado.erros import NaoEncontrado
 from motoriz.contas.aplicacao.portas import HasherDeSenha, RepositorioLocadoras, RepositorioUsuarios
 from motoriz.contas.dominio.erros import EmailJaCadastrado, LocadoraJaCadastrada
-from motoriz.contas.dominio.locadora import Locadora
+from motoriz.contas.dominio.locadora import Locadora, SituacaoLocadora
 from motoriz.contas.dominio.usuario import Usuario
 
 
 def _ator_suporte(locadora: Locadora) -> Ator:
     return Ator(conta_id=locadora.id, usuario_id=None, origem="suporte")
+
+
+def _campos_pessoais_da_locadora(locadora: Locadora) -> frozenset[str]:
+    """O contato é sempre de uma pessoa; numa locadora pessoa física (CPF), nome e documento
+    também são dado pessoal e não entram em claro na trilha, que é imutável."""
+    if locadora.documento.tipo == "CPF":
+        return frozenset({"nome", "documento", "contato"})
+    return frozenset({"contato"})
 
 
 @dataclass(frozen=True)
@@ -62,8 +70,10 @@ class CriarLocadora:
             depois={
                 "nome": locadora.nome,
                 "documento": locadora.documento.valor,
+                "contato": locadora.contato,
                 "situacao": locadora.situacao.value,
             },
+            campos_pessoais=_campos_pessoais_da_locadora(locadora),
         )
         self._auditoria.registrar(
             ator,
@@ -90,6 +100,9 @@ class SuspenderLocadora:
         locadora = self._locadoras.obter_por_documento(Documento.de(documento))
         if locadora is None:
             raise NaoEncontrado("Locadora não encontrada")
+        if locadora.situacao is SituacaoLocadora.SUSPENSA:
+            return  # já está suspensa: nada muda, e a trilha não ganha registro falso
+        antes = {"situacao": locadora.situacao.value}
         locadora.suspender()
         self._locadoras.salvar(locadora)
         self._auditoria.registrar(
@@ -97,8 +110,8 @@ class SuspenderLocadora:
             "locadora.suspensa",
             "locadora",
             locadora.id,
-            antes={"situacao": "ativa"},
-            depois={"situacao": "suspensa"},
+            antes=antes,
+            depois={"situacao": locadora.situacao.value},
         )
 
 
@@ -111,6 +124,9 @@ class ReativarLocadora:
         locadora = self._locadoras.obter_por_documento(Documento.de(documento))
         if locadora is None:
             raise NaoEncontrado("Locadora não encontrada")
+        if locadora.situacao is SituacaoLocadora.ATIVA:
+            return  # já está ativa: nada muda, e a trilha não ganha registro falso
+        antes = {"situacao": locadora.situacao.value}
         locadora.reativar()
         self._locadoras.salvar(locadora)
         self._auditoria.registrar(
@@ -118,6 +134,6 @@ class ReativarLocadora:
             "locadora.reativada",
             "locadora",
             locadora.id,
-            antes={"situacao": "suspensa"},
-            depois={"situacao": "ativa"},
+            antes=antes,
+            depois={"situacao": locadora.situacao.value},
         )

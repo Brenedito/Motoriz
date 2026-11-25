@@ -137,7 +137,11 @@ def cenario() -> Cenario:
         criar=CriarUsuario(usuarios=usuarios, hasher=hasher, auditoria=auditoria),
         listar=ListarUsuarios(usuarios=usuarios),
         desativar=DesativarUsuario(
-            usuarios=usuarios, sessoes=sessoes, relogio=relogio, auditoria=auditoria
+            locadoras=locadoras,
+            usuarios=usuarios,
+            sessoes=sessoes,
+            relogio=relogio,
+            auditoria=auditoria,
         ),
         reativar=ReativarUsuario(usuarios=usuarios, auditoria=auditoria),
     )

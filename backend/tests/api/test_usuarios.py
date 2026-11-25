@@ -1,7 +1,11 @@
+import threading
+import time
+
 import pytest
 from helpers import entrar
 
 from motoriz.compartilhado.ids import novo_id
+from motoriz.contas.adaptadores import repositorios
 
 pytestmark = pytest.mark.banco
 
@@ -114,3 +118,68 @@ def test_papel_invalido_422(cliente, conta_a):
     r = cliente.post("/api/usuarios", json={**_novo_usuario(), "papel": "dono"})
     assert (r.status_code, r.json()["erro"]) == (422, "Dados inválidos")
     assert "papel" in r.json()["campos"]
+
+
+# --- Transições repetidas e regra do último admin sob concorrência ---------------------------
+
+
+def _trilha(cliente, usuario_id) -> list[dict]:
+    r = cliente.get("/api/auditoria", params={"entidade": "usuario", "entidade_id": usuario_id})
+    assert r.status_code == 200
+    return r.json()
+
+
+def test_desativar_duas_vezes_e_idempotente_e_nao_duplica_a_trilha(cliente, conta_a):
+    entrar(cliente, conta_a.admin_email, SENHA)
+    assert cliente.post(f"/api/usuarios/{conta_a.operador_id}/desativar").status_code == 204
+    antes = _trilha(cliente, str(conta_a.operador_id))
+    assert cliente.post(f"/api/usuarios/{conta_a.operador_id}/desativar").status_code == 204
+    depois = _trilha(cliente, str(conta_a.operador_id))
+    assert depois == antes
+    assert [x["acao"] for x in depois].count("usuario.desativado") == 1
+
+
+def test_reativar_usuario_ativo_e_idempotente_e_nao_audita(cliente, conta_a):
+    entrar(cliente, conta_a.admin_email, SENHA)
+    antes = _trilha(cliente, str(conta_a.operador_id))
+    assert cliente.post(f"/api/usuarios/{conta_a.operador_id}/reativar").status_code == 204
+    assert _trilha(cliente, str(conta_a.operador_id)) == antes
+
+
+def test_dois_admins_desativando_um_ao_outro_ao_mesmo_tempo(
+    cliente, cliente_2, conta_a, monkeypatch
+):
+    entrar(cliente, conta_a.admin_email, SENHA)
+    corpo = _novo_usuario("Admin2", papel="admin")
+    admin2 = cliente.post("/api/usuarios", json=corpo).json()["id"]
+    entrar(cliente_2, corpo["email"], corpo["senha_inicial"])
+
+    # Alarga a janela entre contar os admins e gravar, para as duas requisições se cruzarem.
+    original = repositorios.RepositorioUsuariosSql.contar_admins_ativos
+
+    def lento(self):
+        n = original(self)
+        time.sleep(0.5)
+        return n
+
+    monkeypatch.setattr(repositorios.RepositorioUsuariosSql, "contar_admins_ativos", lento)
+    status: dict[str, int] = {}
+
+    def primeiro():
+        status["a"] = cliente.post(f"/api/usuarios/{admin2}/desativar").status_code
+
+    def segundo():
+        status["b"] = cliente_2.post(f"/api/usuarios/{conta_a.admin_id}/desativar").status_code
+
+    threads = [threading.Thread(target=primeiro), threading.Thread(target=segundo)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(timeout=30)
+    monkeypatch.undo()
+
+    assert sorted(status.values()) == [204, 422]
+    # A conta não ficou sem administrador ativo: quem ganhou continua com acesso e admin.
+    vencedor = cliente if status["a"] == 204 else cliente_2
+    usuarios = vencedor.get("/api/usuarios").json()
+    assert [u for u in usuarios if u["papel"] == "admin" and u["ativo"]] != []

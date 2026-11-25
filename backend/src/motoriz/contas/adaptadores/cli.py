@@ -30,7 +30,11 @@ def _criar_parser() -> argparse.ArgumentParser:
     criar.add_argument("--admin-email", required=True)
 
     for nome, ajuda in (
-        ("suspender-locadora", "Suspende a locadora e derruba as sessões abertas."),
+        (
+            "suspender-locadora",
+            "Suspende a locadora: enquanto suspensa, ninguém entra e as sessões abertas são "
+            "recusadas (elas não são revogadas).",
+        ),
         ("reativar-locadora", "Reativa uma locadora suspensa."),
     ):
         comando = sub.add_parser(nome, help=ajuda)

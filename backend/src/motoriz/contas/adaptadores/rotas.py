@@ -166,6 +166,7 @@ def desativar_usuario(
     id: UUID, contexto: Contexto, sessao: SessaoBanco, relogio: RelogioDaApi
 ) -> None:
     DesativarUsuario(
+        locadoras=RepositorioLocadorasSql(sessao, relogio),
         usuarios=RepositorioUsuariosSql(sessao, relogio),
         sessoes=RepositorioSessoesSql(sessao),
         relogio=relogio,
