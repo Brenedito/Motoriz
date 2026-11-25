@@ -35,9 +35,10 @@ def test_gravar_objeto_de_outra_conta_falha(sessao, duas_contas):
 
 
 def test_todas_as_contas_e_explicito(sessao, duas_contas):
-    definir_conta(sessao, duas_contas[0].conta_id)
+    a, b = duas_contas
+    definir_conta(sessao, a.conta_id)
     stmt = select(UsuarioOrm).execution_options(todas_as_contas=True)
-    assert len(sessao.scalars(stmt).all()) == 2
+    assert {a.email, b.email} <= {u.email for u in sessao.scalars(stmt)}
 
 
 def test_gravar_sem_conta_falha(sessao, duas_contas):
@@ -77,8 +78,9 @@ def test_mover_objeto_para_outra_conta_falha(sessao, duas_contas):
 
 
 def test_modo_plataforma_ve_todas(sessao, duas_contas):
+    a, b = duas_contas
     modo_plataforma(sessao)
-    assert len(sessao.scalars(select(UsuarioOrm)).all()) == 2
+    assert {a.email, b.email} <= {u.email for u in sessao.scalars(select(UsuarioOrm))}
 
 
 def test_definir_conta_sai_do_modo_plataforma(sessao, duas_contas):
@@ -151,7 +153,12 @@ def test_update_em_massa_so_afeta_a_propria_conta(sessao, duas_contas):
     sessao.execute(update(UsuarioOrm).values(nome="Alterado"))
     modo_plataforma(sessao)
     nomes = {
-        email: nome for email, nome in sessao.execute(select(UsuarioOrm.email, UsuarioOrm.nome))
+        email: nome
+        for email, nome in sessao.execute(
+            select(UsuarioOrm.email, UsuarioOrm.nome).where(
+                UsuarioOrm.conta_id.in_([a.conta_id, b.conta_id])
+            )
+        )
     }
     assert nomes == {a.email: "Alterado", b.email: "Ana"}
 
@@ -162,11 +169,12 @@ def test_update_em_massa_sem_conta_falha(sessao, duas_contas):
 
 
 def test_tabela_fora_da_conta_nao_exige_conta(sessao, duas_contas):
-    assert len(sessao.scalars(select(LocadoraOrm)).all()) == 2
+    ids = {c.conta_id for c in duas_contas}
+    assert ids <= {loc.id for loc in sessao.scalars(select(LocadoraOrm))}
 
 
 def test_sql_textual_passa_direto(sessao, duas_contas):
-    assert sessao.execute(text("SELECT COUNT(*) FROM usuario")).scalar_one() == 2
+    assert _total_de_usuarios(sessao, duas_contas) == 2
 
 
 def test_locadora_nao_e_da_conta(sessao):
@@ -193,8 +201,11 @@ def _valores_insert(conta_id):
     }
 
 
-def _total_de_usuarios(sessao):
-    return sessao.execute(text("SELECT COUNT(*) FROM usuario")).scalar_one()
+def _total_de_usuarios(sessao, contas):
+    # Só das contas do teste: os testes de API gravam (com commit) outras contas no mesmo banco.
+    a, b = contas
+    sql = text("SELECT COUNT(*) FROM usuario WHERE conta_id IN (:a, :b)")
+    return sessao.execute(sql, {"a": a.conta_id.bytes, "b": b.conta_id.bytes}).scalar_one()
 
 
 def test_core_select_em_tabela_da_conta_e_recusado(sessao, duas_contas):
@@ -227,7 +238,7 @@ def test_core_insert_em_tabela_da_conta_e_recusado(sessao, duas_contas):
     definir_conta(sessao, a.conta_id)
     with pytest.raises(ContextoDeContaAusente):
         sessao.execute(insert(TABELA).values(**_valores_insert(b.conta_id)))
-    assert _total_de_usuarios(sessao) == 2
+    assert _total_de_usuarios(sessao, duas_contas) == 2
 
 
 def test_orm_insert_em_tabela_da_conta_e_recusado(sessao, duas_contas):
@@ -237,24 +248,27 @@ def test_orm_insert_em_tabela_da_conta_e_recusado(sessao, duas_contas):
         sessao.execute(insert(UsuarioOrm).values(**_valores_insert(b.conta_id)))
     with pytest.raises(ContextoDeContaAusente):
         sessao.execute(insert(UsuarioOrm), [_valores_insert(a.conta_id)])
-    assert _total_de_usuarios(sessao) == 2
+    assert _total_de_usuarios(sessao, duas_contas) == 2
 
 
 def test_core_e_insert_liberados_em_modo_plataforma(sessao, duas_contas):
     a, b = duas_contas
     modo_plataforma(sessao)
-    emails = sorted(sessao.execute(select(TABELA.c.email)).scalars())
-    assert emails == sorted([a.email, b.email])
-    assert sessao.execute(update(TABELA).values(nome="X")).rowcount == 2
+    contas = [a.conta_id, b.conta_id]
+    emails = set(sessao.execute(select(TABELA.c.email)).scalars())
+    assert {a.email, b.email} <= emails
+    alterar = update(TABELA).where(TABELA.c.conta_id.in_(contas)).values(nome="X")
+    assert sessao.execute(alterar).rowcount == 2
     sessao.execute(insert(TABELA).values(**_valores_insert(b.conta_id)))
     sessao.execute(insert(UsuarioOrm).values(**_valores_insert(a.conta_id)))
-    assert _total_de_usuarios(sessao) == 4
+    assert _total_de_usuarios(sessao, duas_contas) == 4
 
 
 def test_core_liberado_com_todas_as_contas(sessao, duas_contas):
-    definir_conta(sessao, duas_contas[0].conta_id)
+    a, b = duas_contas
+    definir_conta(sessao, a.conta_id)
     stmt = select(TABELA.c.email).execution_options(todas_as_contas=True)
-    assert len(sessao.execute(stmt).all()) == 2
+    assert {a.email, b.email} <= set(sessao.execute(stmt).scalars())
 
 
 def test_tomar_usuario_de_outra_conta_falha(sessao, duas_contas):

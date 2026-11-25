@@ -1,10 +1,17 @@
 from datetime import timedelta
 
 import pytest
+from fakes.contas import HasherFalso, UsuariosEmMemoria
 
 from motoriz.compartilhado.contexto import ContextoConta
 from motoriz.compartilhado.erros import NaoEncontrado
-from motoriz.contas.dominio.erros import CredenciaisInvalidas, SenhaFraca, SessaoInvalida
+from motoriz.contas.aplicacao.sessao import Entrar
+from motoriz.contas.dominio.erros import (
+    CredenciaisInvalidas,
+    SenhaAtualIncorreta,
+    SenhaFraca,
+    SessaoInvalida,
+)
 from motoriz.contas.dominio.sessao import hash_token
 
 EMAIL = "ana@locadora.com"
@@ -46,6 +53,40 @@ def test_entrar_email_desconhecido_gasta_o_mesmo_hash(cenario):
     with pytest.raises(CredenciaisInvalidas, match="E-mail ou senha incorretos."):
         cenario.entrar.executar("ninguem@x.com", SENHA)
     assert cenario.hasher.chamadas_verificar - antes == 1
+
+
+class HasherQueConta(HasherFalso):
+    def __init__(self) -> None:
+        super().__init__()
+        self.gerados = 0
+        self.hashes_verificados: list[str] = []
+
+    def gerar(self, senha: str) -> str:
+        self.gerados += 1
+        return super().gerar(senha)
+
+    def verificar(self, senha: str, hash: str) -> bool:
+        self.hashes_verificados.append(hash)
+        return super().verificar(senha, hash)
+
+
+def test_entrar_usa_hash_ficticio_dado_sem_gerar_outro(cenario):
+    # A API calcula o hash fictício uma vez na subida: montar Entrar por requisição não pode
+    # custar um Argon2 a mais.
+    hasher = HasherQueConta()
+    entrar = Entrar(
+        locadoras=cenario.locadoras,
+        usuarios=UsuariosEmMemoria(None, cenario.banco),
+        sessoes=cenario.sessoes,
+        hasher=hasher,
+        relogio=cenario.relogio,
+        auditoria=cenario.auditoria,
+        hash_ficticio="hash:ficticio-pronto",
+    )
+    assert hasher.gerados == 0
+    with pytest.raises(CredenciaisInvalidas):
+        entrar.executar("ninguem@x.com", SENHA)
+    assert hasher.hashes_verificados == ["hash:ficticio-pronto"]
 
 
 def test_entrar_email_malformado_nao_chama_hasher(cenario):
@@ -198,17 +239,19 @@ def test_alterar_senha_audita_sem_valores(cenario):
 
 def test_alterar_senha_com_senha_atual_errada(cenario):
     atual = cenario.entrar.executar(EMAIL, SENHA).token
-    with pytest.raises(CredenciaisInvalidas):
+    # Erro próprio (422), e não CredenciaisInvalidas (401): a sessão continua válida.
+    with pytest.raises(SenhaAtualIncorreta, match="Senha atual incorreta."):
         cenario.alterar_senha.executar(
             cenario.ctx_admin, atual, "errada-errada", "outra-senha-forte"
         )
+    assert not isinstance(SenhaAtualIncorreta(), CredenciaisInvalidas)
     assert cenario.usuarios.obter(cenario.ana.id).hash_senha == "hash:" + SENHA
 
 
 def test_alterar_senha_atual_gigante_nao_chama_hasher(cenario):
     atual = cenario.entrar.executar(EMAIL, SENHA).token
     antes = cenario.hasher.chamadas_verificar
-    with pytest.raises(CredenciaisInvalidas):
+    with pytest.raises(SenhaAtualIncorreta):
         cenario.alterar_senha.executar(cenario.ctx_admin, atual, "x" * 129, "outra-senha-forte")
     assert cenario.hasher.chamadas_verificar == antes
 

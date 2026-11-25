@@ -262,5 +262,8 @@ def test_obter_usuario_em_todas_as_contas_sem_conta_definida(sessao, duas_contas
 
 
 def test_plataforma_le_locadora_e_usuarios(sessao, duas_contas):
+    a, b = duas_contas
     modo_plataforma(sessao)
-    assert len(RepositorioUsuariosSql(sessao).listar()) == 2
+    # Contém as duas contas; o banco pode ter outras, gravadas pelos testes de API.
+    ids = {u.id for u in RepositorioUsuariosSql(sessao).listar()}
+    assert {a.usuario_id, b.usuario_id} <= ids

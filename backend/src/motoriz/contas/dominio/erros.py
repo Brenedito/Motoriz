@@ -11,6 +11,13 @@ class SessaoInvalida(ErroDeDominio):
         super().__init__(mensagem)
 
 
+class SenhaAtualIncorreta(ErroDeDominio):
+    """Ao trocar a senha. Não é `CredenciaisInvalidas`: a sessão segue válida (422, não 401)."""
+
+    def __init__(self, mensagem: str = "Senha atual incorreta.") -> None:
+        super().__init__(mensagem)
+
+
 class SenhaFraca(ErroDeDominio):
     pass
 

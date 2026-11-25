@@ -13,7 +13,11 @@ from motoriz.contas.aplicacao.portas import (
     RepositorioSessoes,
     RepositorioUsuarios,
 )
-from motoriz.contas.dominio.erros import CredenciaisInvalidas, SessaoInvalida
+from motoriz.contas.dominio.erros import (
+    CredenciaisInvalidas,
+    SenhaAtualIncorreta,
+    SessaoInvalida,
+)
 from motoriz.contas.dominio.senha import TAMANHO_MAXIMO, validar_senha
 from motoriz.contas.dominio.sessao import Sessao, hash_token
 
@@ -22,6 +26,11 @@ from motoriz.contas.dominio.sessao import Sessao, hash_token
 class SessaoEmitida:
     token: str
     expira_em: datetime
+
+
+def gerar_hash_ficticio(hasher: HasherDeSenha) -> str:
+    """Hash de uma senha aleatória, para `Entrar` comparar quando o e-mail não existe."""
+    return hasher.gerar(secrets.token_urlsafe(16))
 
 
 class Entrar:
@@ -34,6 +43,7 @@ class Entrar:
         hasher: HasherDeSenha,
         relogio: Relogio,
         auditoria: RegistradorDeAcoes,
+        hash_ficticio: str | None = None,
     ) -> None:
         self._locadoras = locadoras
         self._usuarios = usuarios
@@ -42,7 +52,8 @@ class Entrar:
         self._relogio = relogio
         self._auditoria = auditoria
         # Hash com o custo real do hasher, para gastar o mesmo tempo quando o e-mail não existe.
-        self._hash_ficticio = hasher.gerar(secrets.token_urlsafe(16))
+        # Quem monta Entrar por requisição (a API) passa um pronto, calculado uma vez na subida.
+        self._hash_ficticio = hash_ficticio or gerar_hash_ficticio(hasher)
 
     def executar(self, email: str, senha: str) -> SessaoEmitida:
         # Toda recusa é a mesma exceção, com a mesma mensagem: quem tenta não descobre qual
@@ -152,7 +163,7 @@ class AlterarSenha:
         if len(senha_atual) > TAMANHO_MAXIMO or not self._hasher.verificar(
             senha_atual, usuario.hash_senha
         ):
-            raise CredenciaisInvalidas("Senha atual incorreta.")
+            raise SenhaAtualIncorreta
         validar_senha(senha_nova)
         usuario.trocar_hash_senha(self._hasher.gerar(senha_nova))
         self._usuarios.salvar(usuario)
