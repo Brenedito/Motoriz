@@ -13,15 +13,42 @@ services:
     volumes:
       - mysql_dados:/var/lib/mysql
       - ./infra/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
 
+  # Ainda sem uso (fotos chegam em outra fatia). Fica num profile para o `up` padrão não
+  # depender dessa imagem: `docker compose --profile armazenamento up`.
   minio:
     image: minio/minio
+    profiles: ["armazenamento"]
     command: server /data --console-address :9001
     ports:
       - "9000:9000"
       - "9001:9001"
     volumes:
       - minio_dados:/data
+
+  api:
+    build: ./backend
+    environment:
+      MOTORIZ_URL_BANCO_APP: mysql+pymysql://motoriz_app:app_dev@mysql:3306/motoriz
+      MOTORIZ_URL_BANCO_MIGRACAO: mysql+pymysql://motoriz_migracao:migracao_dev@mysql:3306/motoriz
+      # Local é http; em produção o cookie de sessão precisa de Secure.
+      MOTORIZ_COOKIE_SEGURO: "false"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  web:
+    build: ./frontend
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
 
 volumes:
   mysql_dados:

@@ -123,8 +123,7 @@ ROTAS_SEM_CONTA: set[tuple[str, str]] = {
     # Documentação gerada pelo FastAPI (objetos `Route`, não `APIRoute`).
     ("GET", "/api/openapi.json"),
     ("GET", "/api/docs"),
-    ("GET", "/docs/oauth2-redirect"),
-    ("GET", "/redoc"),
+    ("GET", "/api/docs/oauth2-redirect"),
     # Criar usuário: o corpo não traz id de outra conta (a conta vem da sessão) e o e-mail é
     # único no sistema inteiro, então usar o e-mail de um admin da conta B dá 409, caso já
     # coberto na Task 8. Não há dado de B a alcançar por esta rota.

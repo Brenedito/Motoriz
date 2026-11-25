@@ -39,6 +39,8 @@ def criar_app(config: Configuracao | None = None) -> FastAPI:
         title="Motoriz",
         openapi_url="/api/openapi.json",
         docs_url="/api/docs",
+        redoc_url=None,
+        swagger_ui_oauth2_redirect_url="/api/docs/oauth2-redirect",
         lifespan=ciclo_de_vida,
     )
     hasher = HasherArgon2()
