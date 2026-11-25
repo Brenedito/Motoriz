@@ -4,19 +4,22 @@ O MySQL não tem segurança por linha, então toda tabela de dado de locadora ma
 `DaConta` e a sessão aplica, sozinha, o filtro `conta_id = <conta da sessão>`:
 
 - leitura, UPDATE e DELETE pelo ORM recebem o critério da conta (`with_loader_criteria`);
-- gravação (flush) recusa objeto `DaConta` de outra conta;
-- sem conta definida, nada que toque `DaConta` roda, a não ser em modo plataforma ou com
-  `execution_options(todas_as_contas=True)` explícito na consulta.
+- gravação (flush) recusa objeto `DaConta` de outra conta, olhando o valor atual e o gravado;
+- comandos que o critério não alcança — Core sobre `Table` e `insert()` via `Session.execute` —
+  são recusados quando tocam tabela da conta;
+- sem conta definida, nada que toque `DaConta` roda.
 
-SQL textual (`text(...)`) e Core puro sobre `Table` não passam pelo filtro: são saídas
-deliberadas e não devem ser usados para dado de locadora.
+Em todos os casos, a saída é explícita: modo plataforma ou
+`execution_options(todas_as_contas=True)` na consulta. SQL textual (`text(...)`) não é analisado e
+não deve ser usado para dado de locadora.
 """
 
+from collections.abc import Iterator
 from itertools import chain
 from typing import Any, ClassVar
 from uuid import UUID
 
-from sqlalchemy import event
+from sqlalchemy import event, inspect
 from sqlalchemy.orm import (
     Mapped,
     ORMExecuteState,
@@ -26,8 +29,9 @@ from sqlalchemy.orm import (
     sessionmaker,
     with_loader_criteria,
 )
-from sqlalchemy.sql import visitors
+from sqlalchemy.sql.elements import ColumnClause
 from sqlalchemy.sql.selectable import TableClause
+from sqlalchemy.sql.visitors import ExternallyTraversible, HasTraverseInternals
 
 from motoriz.infra.tipos import UUIDBinario
 
@@ -63,38 +67,71 @@ def modo_plataforma(sessao: Session) -> None:
     sessao.info[CHAVE_PLATAFORMA] = True
 
 
-def _toca_tabela_da_conta(estado: ORMExecuteState) -> bool:
-    # `all_mappers` só enxerga as entidades do resultado; `select(func.count()).select_from(X)`,
-    # joins e subconsultas ficam de fora. Por isso também percorremos as tabelas do comando.
-    if any(issubclass(m.class_, DaConta) for m in estado.all_mappers):
-        return True
-    comando = estado.statement
-    if not isinstance(comando, visitors.ExternallyTraversible):
-        return False
-    return any(
-        isinstance(el, TableClause) and el.name in DaConta._tabelas
-        for el in visitors.iterate(comando)
-    )
+def _entidade_da_conta(elemento: Any) -> bool:
+    """O elemento é referência ORM (anotada) a uma entidade `DaConta`?"""
+    entidade = getattr(elemento, "_annotations", {}).get("parententity")
+    return entidade is not None and issubclass(entidade.mapper.class_, DaConta)
+
+
+def _da_conta(tabela: Any) -> bool:
+    return isinstance(tabela, TableClause) and tabela.name in DaConta._tabelas
+
+
+def _referencias(comando: ExternallyTraversible) -> Iterator[tuple[bool, bool]]:
+    """Percorre o comando e devolve (toca_tabela_da_conta, via_entidade_orm) por referência.
+
+    Não desce dentro de elementos ORM anotados de entidade `DaConta` (entidade, alias, coluna
+    mapeada): esses o `with_loader_criteria` filtra. Nas demais entidades desce, porque um
+    `aliased(Outra, <subconsulta Core>)` pode esconder tabela da conta. Qualquer `Table`/coluna de
+    tabela da conta sem anotação é Core puro, que o critério não alcança.
+    """
+    pilha: list[Any] = [comando]
+    while pilha:
+        el = pilha.pop()
+        if _entidade_da_conta(el):
+            yield True, True
+            continue
+        if _da_conta(el) or (isinstance(el, ColumnClause) and _da_conta(el.table)):
+            yield True, False
+        # Só os filhos estruturais: `Select.get_children()` também devolve o FROM derivado das
+        # colunas, já sem a anotação ORM, o que faria toda consulta ORM parecer Core.
+        if isinstance(el, HasTraverseInternals):
+            pilha.extend(HasTraverseInternals.get_children(el))
 
 
 def _aplicar_filtro(estado: ORMExecuteState) -> None:
-    if not (estado.is_select or estado.is_update or estado.is_delete):
+    comando = estado.statement
+    if not isinstance(comando, ExternallyTraversible):
         return
-    if not _toca_tabela_da_conta(estado):
+    refs = list(_referencias(comando))
+    toca = bool(refs) or any(issubclass(m.class_, DaConta) for m in estado.all_mappers)
+    if not toca:
         return
     if estado.execution_options.get(OPCAO_TODAS_AS_CONTAS):
         return
     info = estado.session.info
     if info.get(CHAVE_PLATAFORMA):
         return
+    if estado.is_insert:
+        raise ContextoDeContaAusente("INSERT em tabela da conta só pelo flush da sessão")
+    if not all(via_orm for _, via_orm in refs) or not estado.is_orm_statement:
+        raise ContextoDeContaAusente("Comando Core sobre tabela da conta não é filtrado")
+    if not (estado.is_select or estado.is_update or estado.is_delete):
+        raise ContextoDeContaAusente("Comando não suportado sobre tabela da conta")
     conta_id = info.get(CHAVE_CONTA)
     if conta_id is None:
         raise ContextoDeContaAusente("Contexto de conta ausente")
     # `conta_id` é uma variável de closure: o SQLAlchemy a rastreia como parâmetro, de modo que
     # o SQL em cache é reaproveitado sem fixar a conta da primeira execução.
-    estado.statement = estado.statement.options(
+    estado.statement = comando.options(
         with_loader_criteria(DaConta, lambda cls: cls.conta_id == conta_id, include_aliases=True)
     )
+
+
+def _contas_envolvidas(obj: DaConta) -> set[Any]:
+    """Conta atual do objeto e, se já gravado, também a conta que está no banco."""
+    historico = inspect(obj).attrs.conta_id.history
+    return {obj.conta_id, *historico.deleted, *historico.unchanged}
 
 
 def _verificar_gravacao(sessao: Session, _contexto: UOWTransaction, _instancias: Any) -> None:
@@ -106,7 +143,7 @@ def _verificar_gravacao(sessao: Session, _contexto: UOWTransaction, _instancias:
             continue
         if conta_id is None:
             raise ContextoDeContaAusente("Contexto de conta ausente")
-        if obj.conta_id != conta_id:
+        if _contas_envolvidas(obj) != {conta_id}:
             raise ContextoDeContaAusente("Objeto de outra conta")
 
 

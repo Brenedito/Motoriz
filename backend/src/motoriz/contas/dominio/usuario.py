@@ -19,9 +19,7 @@ class Usuario:
     ativo: bool
 
     @classmethod
-    def novo(
-        cls, conta_id: UUID, nome: str, email: Email, papel: Papel, hash_senha: str
-    ) -> Self:
+    def novo(cls, conta_id: UUID, nome: str, email: Email, papel: Papel, hash_senha: str) -> Self:
         return cls(
             id=novo_id(),
             conta_id=conta_id,

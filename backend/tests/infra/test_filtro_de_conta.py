@@ -1,8 +1,11 @@
+from datetime import UTC, datetime
+
 import pytest
 from conftest import locadora_orm, usuario_orm
-from sqlalchemy import func, select, text, update
+from sqlalchemy import delete, func, insert, select, text, update
 from sqlalchemy.orm import aliased
 
+from motoriz.compartilhado.ids import novo_id
 from motoriz.contas.adaptadores.orm import LocadoraOrm, UsuarioOrm
 from motoriz.infra.banco import criar_fabrica
 from motoriz.infra.conta import ContextoDeContaAusente, definir_conta, modo_plataforma
@@ -166,3 +169,128 @@ def test_sql_textual_passa_direto(sessao, duas_contas):
 def test_locadora_nao_e_da_conta(sessao):
     sessao.add(locadora_orm("52998224725"))
     sessao.flush()
+
+
+# --- Regressões da revisão: Core sobre Table, insert() e tomada de linha de outra conta -------
+
+TABELA = UsuarioOrm.__table__
+
+
+def _valores_insert(conta_id):
+    return {
+        "id": novo_id(),
+        "conta_id": conta_id,
+        "nome": "Intrusa",
+        "email": f"{novo_id().hex}@x.com",
+        "papel": "operador",
+        "hash_senha": "h",
+        "ativo": True,
+        "versao": 1,
+        "criado_em": datetime.now(UTC),
+    }
+
+
+def _total_de_usuarios(sessao):
+    return sessao.execute(text("SELECT COUNT(*) FROM usuario")).scalar_one()
+
+
+def test_core_select_em_tabela_da_conta_e_recusado(sessao, duas_contas):
+    definir_conta(sessao, duas_contas[0].conta_id)
+    with pytest.raises(ContextoDeContaAusente):
+        sessao.execute(select(TABELA.c.email)).all()
+
+
+def test_core_select_misturado_com_orm_e_recusado(sessao, duas_contas):
+    definir_conta(sessao, duas_contas[0].conta_id)
+    with pytest.raises(ContextoDeContaAusente):
+        sessao.execute(select(UsuarioOrm.email).where(TABELA.c.nome == "Ana")).all()
+
+
+def test_core_update_em_tabela_da_conta_e_recusado(sessao, duas_contas):
+    definir_conta(sessao, duas_contas[0].conta_id)
+    with pytest.raises(ContextoDeContaAusente):
+        sessao.execute(update(TABELA).values(nome="X"))
+    assert sessao.execute(text("SELECT COUNT(*) FROM usuario WHERE nome = 'X'")).scalar() == 0
+
+
+def test_core_delete_em_tabela_da_conta_e_recusado(sessao, duas_contas):
+    definir_conta(sessao, duas_contas[0].conta_id)
+    with pytest.raises(ContextoDeContaAusente):
+        sessao.execute(delete(TABELA))
+
+
+def test_core_insert_em_tabela_da_conta_e_recusado(sessao, duas_contas):
+    a, b = duas_contas
+    definir_conta(sessao, a.conta_id)
+    with pytest.raises(ContextoDeContaAusente):
+        sessao.execute(insert(TABELA).values(**_valores_insert(b.conta_id)))
+    assert _total_de_usuarios(sessao) == 2
+
+
+def test_orm_insert_em_tabela_da_conta_e_recusado(sessao, duas_contas):
+    a, b = duas_contas
+    definir_conta(sessao, a.conta_id)
+    with pytest.raises(ContextoDeContaAusente):
+        sessao.execute(insert(UsuarioOrm).values(**_valores_insert(b.conta_id)))
+    with pytest.raises(ContextoDeContaAusente):
+        sessao.execute(insert(UsuarioOrm), [_valores_insert(a.conta_id)])
+    assert _total_de_usuarios(sessao) == 2
+
+
+def test_core_e_insert_liberados_em_modo_plataforma(sessao, duas_contas):
+    a, b = duas_contas
+    modo_plataforma(sessao)
+    emails = sorted(sessao.execute(select(TABELA.c.email)).scalars())
+    assert emails == sorted([a.email, b.email])
+    assert sessao.execute(update(TABELA).values(nome="X")).rowcount == 2
+    sessao.execute(insert(TABELA).values(**_valores_insert(b.conta_id)))
+    sessao.execute(insert(UsuarioOrm).values(**_valores_insert(a.conta_id)))
+    assert _total_de_usuarios(sessao) == 4
+
+
+def test_core_liberado_com_todas_as_contas(sessao, duas_contas):
+    definir_conta(sessao, duas_contas[0].conta_id)
+    stmt = select(TABELA.c.email).execution_options(todas_as_contas=True)
+    assert len(sessao.execute(stmt).all()) == 2
+
+
+def test_tomar_usuario_de_outra_conta_falha(sessao, duas_contas):
+    a, b = duas_contas
+    definir_conta(sessao, a.conta_id)
+    usuario_b = sessao.scalars(
+        select(UsuarioOrm)
+        .where(UsuarioOrm.id == b.usuario_id)
+        .execution_options(todas_as_contas=True)
+    ).one()
+    usuario_b.conta_id = a.conta_id
+    with pytest.raises(ContextoDeContaAusente):
+        sessao.flush()
+
+
+def test_apagar_usuario_de_outra_conta_falha(sessao, duas_contas):
+    a, b = duas_contas
+    definir_conta(sessao, a.conta_id)
+    usuario_b = sessao.scalars(
+        select(UsuarioOrm)
+        .where(UsuarioOrm.id == b.usuario_id)
+        .execution_options(todas_as_contas=True)
+    ).one()
+    sessao.delete(usuario_b)
+    with pytest.raises(ContextoDeContaAusente):
+        sessao.flush()
+
+
+def test_plataforma_pode_mover_usuario_de_conta(sessao, duas_contas):
+    a, b = duas_contas
+    modo_plataforma(sessao)
+    usuario_b = sessao.get(UsuarioOrm, b.usuario_id)
+    usuario_b.conta_id = a.conta_id
+    sessao.flush()
+
+
+def test_core_escondido_em_alias_de_outra_entidade_e_recusado(sessao, duas_contas):
+    definir_conta(sessao, duas_contas[0].conta_id)
+    sub = select(TABELA.c.conta_id.label("id")).subquery()
+    falsa = aliased(LocadoraOrm, sub, adapt_on_names=True)
+    with pytest.raises(ContextoDeContaAusente):
+        sessao.execute(select(falsa.id)).all()

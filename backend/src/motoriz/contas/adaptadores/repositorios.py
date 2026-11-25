@@ -222,6 +222,11 @@ class RepositorioSessoesSql:
             update(SessaoOrm)
             .where(SessaoOrm.usuario_id == usuario_id, SessaoOrm.revogada_em.is_(None))
             .values(revogada_em=agora)
-            .execution_options(synchronize_session="fetch")
+            # "fetch" montaria um SELECT interno com colunas Core, que o filtro de conta recusa;
+            # em vez disso, expiramos as sessões já carregadas desse usuário.
+            .execution_options(synchronize_session=False)
         )
         self._sessao.execute(stmt)
+        for obj in list(self._sessao.identity_map.values()):
+            if isinstance(obj, SessaoOrm) and obj.usuario_id == usuario_id:
+                self._sessao.expire(obj)
