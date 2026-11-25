@@ -8,7 +8,7 @@ from motoriz.compartilhado.contexto import Papel
 from motoriz.compartilhado.documento import Documento
 from motoriz.compartilhado.email import Email
 from motoriz.compartilhado.relogio import RelogioFixo
-from motoriz.contas.adaptadores.orm import LocadoraOrm, UsuarioOrm
+from motoriz.contas.adaptadores.orm import LocadoraOrm, SessaoOrm, UsuarioOrm
 from motoriz.contas.adaptadores.repositorios import (
     RepositorioLocadorasSql,
     RepositorioSessoesSql,
@@ -224,6 +224,20 @@ def test_revogar_do_usuario_nao_reescreve_revogadas(sessao, usuario_gravado):
     repo.adicionar(antiga)
     repo.revogar_do_usuario(usuario_gravado.id, AGORA + timedelta(days=1))
     assert repo.obter_por_hash_em_todas_as_contas(antiga.token_hash).revogada_em == AGORA
+
+
+def test_revogar_do_usuario_deixa_objetos_carregados_legiveis(sessao, usuario_gravado):
+    repo = RepositorioSessoesSql(sessao)
+    s1, _ = Sessao.emitir(usuario_gravado.conta_id, usuario_gravado.id, AGORA)
+    s2, _ = Sessao.emitir(usuario_gravado.conta_id, usuario_gravado.id, AGORA)
+    repo.adicionar(s1)
+    repo.adicionar(s2)
+    carregadas = sessao.scalars(select(SessaoOrm).order_by(SessaoOrm.id)).all()
+    sessao.expire(carregadas[0])  # já expirada antes: o repositório não pode tropeçar nela
+    quando = AGORA + timedelta(minutes=1)
+    repo.revogar_do_usuario(usuario_gravado.id, quando)
+    assert [s.revogada_em for s in carregadas] == [quando, quando]
+    assert {s.usuario_id for s in carregadas} == {usuario_gravado.id}
 
 
 def test_plataforma_le_locadora_e_usuarios(sessao, duas_contas):

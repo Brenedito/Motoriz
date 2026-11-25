@@ -2,8 +2,9 @@ from datetime import UTC, datetime
 
 import pytest
 from conftest import locadora_orm, usuario_orm
-from sqlalchemy import delete, func, insert, select, text, update
+from sqlalchemy import delete, exists, func, insert, select, text, update
 from sqlalchemy.orm import aliased
+from sqlalchemy.orm.exc import ObjectDeletedError
 
 from motoriz.compartilhado.ids import novo_id
 from motoriz.contas.adaptadores.orm import LocadoraOrm, UsuarioOrm
@@ -55,10 +56,12 @@ def test_gravar_na_propria_conta_passa(sessao, duas_contas):
 
 def test_alterar_objeto_de_outra_conta_falha(sessao, duas_contas):
     a, b = duas_contas
-    modo_plataforma(sessao)
-    usuario_b = sessao.get(UsuarioOrm, b.usuario_id)
-    sessao.info.clear()
     definir_conta(sessao, a.conta_id)
+    usuario_b = sessao.scalars(
+        select(UsuarioOrm)
+        .where(UsuarioOrm.id == b.usuario_id)
+        .execution_options(todas_as_contas=True)
+    ).one()
     usuario_b.nome = "Invasor"
     with pytest.raises(ContextoDeContaAusente):
         sessao.flush()
@@ -294,3 +297,155 @@ def test_core_escondido_em_alias_de_outra_entidade_e_recusado(sessao, duas_conta
     falsa = aliased(LocadoraOrm, sub, adapt_on_names=True)
     with pytest.raises(ContextoDeContaAusente):
         sessao.execute(select(falsa.id)).all()
+
+
+# --- Regressões da 2ª revisão: cargas por identidade, exists() e conta_id não carregado ------
+
+
+def _usuario_de_b(sessao, b):
+    stmt = (
+        select(UsuarioOrm)
+        .where(UsuarioOrm.id == b.usuario_id)
+        .execution_options(todas_as_contas=True)
+    )
+    return sessao.scalars(stmt).one()
+
+
+def test_get_da_propria_conta_e_de_outra(sessao, duas_contas):
+    a, b = duas_contas
+    definir_conta(sessao, a.conta_id)
+    assert sessao.get(UsuarioOrm, a.usuario_id) is not None
+    assert sessao.get(UsuarioOrm, b.usuario_id) is None
+
+
+def test_get_sem_conta_falha(sessao, duas_contas):
+    sessao.expunge_all()
+    with pytest.raises(ContextoDeContaAusente):
+        sessao.get(UsuarioOrm, duas_contas[0].usuario_id)
+
+
+def test_definir_conta_tira_objetos_de_outra_conta_do_mapa(sessao, duas_contas):
+    a, b = duas_contas
+    modo_plataforma(sessao)
+    sessao.get(UsuarioOrm, b.usuario_id)
+    definir_conta(sessao, a.conta_id)
+    assert sessao.get(UsuarioOrm, b.usuario_id) is None
+
+
+def test_definir_conta_com_alteracao_pendente_de_outra_conta_falha(sessao, duas_contas):
+    a, b = duas_contas
+    modo_plataforma(sessao)
+    sessao.get(UsuarioOrm, b.usuario_id).nome = "Pendente"
+    with pytest.raises(ContextoDeContaAusente):
+        definir_conta(sessao, a.conta_id)
+
+
+def test_atributo_expirado_recarrega(sessao, duas_contas):
+    a, _ = duas_contas
+    definir_conta(sessao, a.conta_id)
+    u = sessao.scalars(select(UsuarioOrm)).one()
+    sessao.expire(u)
+    assert u.email == a.email
+
+
+def test_recarga_troca_de_conta_nao_reaproveita_o_filtro(sessao, duas_contas):
+    a, b = duas_contas
+    for conta in (a, b, a):
+        definir_conta(sessao, conta.conta_id)
+        u = sessao.scalars(select(UsuarioOrm)).one()
+        sessao.expire(u)
+        assert u.email == conta.email
+
+
+def test_refresh(sessao, duas_contas):
+    a, _ = duas_contas
+    definir_conta(sessao, a.conta_id)
+    u = sessao.scalars(select(UsuarioOrm)).one()
+    sessao.refresh(u)
+    assert u.email == a.email
+
+
+def test_atributo_depois_do_commit(sessao, duas_contas):
+    a, _ = duas_contas
+    definir_conta(sessao, a.conta_id)
+    u = sessao.scalars(select(UsuarioOrm)).one()
+    sessao.commit()
+    assert u.email == a.email
+
+
+def test_atributo_depois_do_commit_redefinindo_a_mesma_conta(sessao, duas_contas):
+    a, _ = duas_contas
+    definir_conta(sessao, a.conta_id)
+    u = sessao.scalars(select(UsuarioOrm)).one()
+    sessao.commit()
+    definir_conta(sessao, a.conta_id)
+    assert u.email == a.email
+
+
+def test_trocar_de_conta_tira_objetos_expirados_do_mapa(sessao, duas_contas):
+    a, b = duas_contas
+    definir_conta(sessao, a.conta_id)
+    u = sessao.scalars(select(UsuarioOrm)).one()
+    sessao.commit()
+    definir_conta(sessao, b.conta_id)
+    assert u not in sessao
+    assert sessao.get(UsuarioOrm, a.usuario_id) is None
+
+
+def test_recarga_de_objeto_de_outra_conta_nao_devolve_a_linha(sessao, duas_contas):
+    a, b = duas_contas
+    definir_conta(sessao, a.conta_id)
+    usuario_b = _usuario_de_b(sessao, b)
+    sessao.expire(usuario_b)
+    with pytest.raises(ObjectDeletedError):
+        _ = usuario_b.email
+
+
+def test_exists_orm_funciona_e_e_filtrado(sessao, duas_contas):
+    a, b = duas_contas
+    definir_conta(sessao, a.conta_id)
+    assert sessao.scalar(select(exists().where(UsuarioOrm.email == a.email))) is True
+    assert sessao.scalar(select(exists().where(UsuarioOrm.email == b.email))) is False
+
+
+def test_exists_orm_sem_conta_falha(sessao, duas_contas):
+    with pytest.raises(ContextoDeContaAusente):
+        sessao.scalar(select(exists().where(UsuarioOrm.email == duas_contas[0].email)))
+
+
+def test_exists_core_e_recusado(sessao, duas_contas):
+    definir_conta(sessao, duas_contas[0].conta_id)
+    stmt = select(LocadoraOrm.nome).where(exists().where(TABELA.c.conta_id == LocadoraOrm.id))
+    with pytest.raises(ContextoDeContaAusente):
+        sessao.execute(stmt).all()
+
+
+def test_tomar_usuario_com_conta_id_expirado_falha(sessao, duas_contas):
+    a, b = duas_contas
+    definir_conta(sessao, a.conta_id)
+    usuario_b = _usuario_de_b(sessao, b)
+    sessao.expire(usuario_b, ["conta_id"])
+    usuario_b.conta_id = a.conta_id
+    usuario_b.nome = "hack"
+    with pytest.raises(ContextoDeContaAusente):
+        sessao.flush()
+
+
+def test_tomar_usuario_totalmente_expirado_falha(sessao, duas_contas):
+    a, b = duas_contas
+    definir_conta(sessao, a.conta_id)
+    usuario_b = _usuario_de_b(sessao, b)
+    sessao.commit()
+    usuario_b.conta_id = a.conta_id
+    with pytest.raises(ContextoDeContaAusente):
+        sessao.flush()
+
+
+def test_alterar_objeto_proprio_expirado_passa(sessao, duas_contas):
+    a, _ = duas_contas
+    definir_conta(sessao, a.conta_id)
+    u = sessao.scalars(select(UsuarioOrm)).one()
+    sessao.commit()
+    u.nome = "Novo"
+    sessao.flush()
+    assert sessao.scalars(select(UsuarioOrm.nome)).one() == "Novo"

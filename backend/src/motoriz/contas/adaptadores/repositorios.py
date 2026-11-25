@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from sqlalchemy import func, select, update
+from sqlalchemy import func, inspect, select, update
 from sqlalchemy.orm import Session
 
 from motoriz.compartilhado.contexto import Papel
@@ -228,5 +228,9 @@ class RepositorioSessoesSql:
         )
         self._sessao.execute(stmt)
         for obj in list(self._sessao.identity_map.values()):
-            if isinstance(obj, SessaoOrm) and obj.usuario_id == usuario_id:
+            if not isinstance(obj, SessaoOrm):
+                continue
+            # Lê do estado, sem disparar carga; se o atributo não está carregado, expira também.
+            dono = inspect(obj).dict.get("usuario_id")
+            if dono is None or dono == usuario_id:
                 self._sessao.expire(obj)
