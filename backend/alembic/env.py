@@ -5,15 +5,14 @@ from pathlib import Path
 from alembic import context
 from sqlalchemy import create_engine, text
 
+import motoriz.contas.adaptadores.orm  # noqa: F401  (popula Base.metadata)
 from motoriz.infra.banco import Base
 from motoriz.infra.config import obter_configuracao
 
 # Permite que as migrações importem `conceder` (alembic/conceder.py).
 sys.path.insert(0, str(Path(__file__).parent))
 
-# As Tasks 5 e 6 importam aqui os mapeamentos ORM para popular Base.metadata:
-#   motoriz.contas.adaptadores.orm
-#   motoriz.auditoria.adaptadores.orm
+# A Task 6 importa aqui também motoriz.auditoria.adaptadores.orm.
 
 config = context.config
 
