@@ -1,0 +1,585 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Motoriz",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/saude": {
+      "get": {
+        "summary": "Saude",
+        "operationId": "saude_api_saude_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Saude Api Saude Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sessao": {
+      "get": {
+        "tags": [
+          "sessao"
+        ],
+        "summary": "Sessao Atual",
+        "operationId": "sessao_atual_api_sessao_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessaoAtual"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "sessao"
+        ],
+        "summary": "Entrar",
+        "operationId": "entrar_api_sessao_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorpoEntrar"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "sessao"
+        ],
+        "summary": "Sair",
+        "operationId": "sair_api_sessao_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        }
+      }
+    },
+    "/api/sessao/senha": {
+      "post": {
+        "tags": [
+          "sessao"
+        ],
+        "summary": "Alterar Senha",
+        "operationId": "alterar_senha_api_sessao_senha_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorpoAlterarSenha"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/usuarios": {
+      "get": {
+        "tags": [
+          "usuarios"
+        ],
+        "summary": "Listar Usuarios",
+        "operationId": "listar_usuarios_api_usuarios_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/UsuarioSaida"
+                  },
+                  "type": "array",
+                  "title": "Response Listar Usuarios Api Usuarios Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "usuarios"
+        ],
+        "summary": "Criar Usuario",
+        "operationId": "criar_usuario_api_usuarios_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorpoCriarUsuario"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioSaida"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/usuarios/{id}/desativar": {
+      "post": {
+        "tags": [
+          "usuarios"
+        ],
+        "summary": "Desativar Usuario",
+        "operationId": "desativar_usuario_api_usuarios__id__desativar_post",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/usuarios/{id}/reativar": {
+      "post": {
+        "tags": [
+          "usuarios"
+        ],
+        "summary": "Reativar Usuario",
+        "operationId": "reativar_usuario_api_usuarios__id__reativar_post",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auditoria": {
+      "get": {
+        "tags": [
+          "auditoria"
+        ],
+        "summary": "Consultar Trilha",
+        "operationId": "consultar_trilha_api_auditoria_get",
+        "parameters": [
+          {
+            "name": "entidade",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Entidade"
+            }
+          },
+          {
+            "name": "entidade_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Entidade Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RegistroSaida"
+                  },
+                  "title": "Response Consultar Trilha Api Auditoria Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CorpoAlterarSenha": {
+        "properties": {
+          "senha_atual": {
+            "type": "string",
+            "title": "Senha Atual"
+          },
+          "senha_nova": {
+            "type": "string",
+            "title": "Senha Nova"
+          }
+        },
+        "type": "object",
+        "required": [
+          "senha_atual",
+          "senha_nova"
+        ],
+        "title": "CorpoAlterarSenha"
+      },
+      "CorpoCriarUsuario": {
+        "properties": {
+          "nome": {
+            "type": "string",
+            "title": "Nome"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "papel": {
+            "$ref": "#/components/schemas/Papel"
+          },
+          "senha_inicial": {
+            "type": "string",
+            "title": "Senha Inicial"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nome",
+          "email",
+          "papel",
+          "senha_inicial"
+        ],
+        "title": "CorpoCriarUsuario"
+      },
+      "CorpoEntrar": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "senha": {
+            "type": "string",
+            "title": "Senha"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "senha"
+        ],
+        "title": "CorpoEntrar"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Papel": {
+        "type": "string",
+        "enum": [
+          "admin",
+          "operador"
+        ],
+        "title": "Papel"
+      },
+      "RegistroSaida": {
+        "properties": {
+          "acao": {
+            "type": "string",
+            "title": "Acao"
+          },
+          "origem": {
+            "type": "string",
+            "title": "Origem"
+          },
+          "usuario_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usuario Id"
+          },
+          "antes": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Antes"
+          },
+          "depois": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Depois"
+          },
+          "registrado_em": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Registrado Em"
+          }
+        },
+        "type": "object",
+        "required": [
+          "acao",
+          "origem",
+          "usuario_id",
+          "antes",
+          "depois",
+          "registrado_em"
+        ],
+        "title": "RegistroSaida"
+      },
+      "SessaoAtual": {
+        "properties": {
+          "usuario_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Usuario Id"
+          },
+          "nome": {
+            "type": "string",
+            "title": "Nome"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "papel": {
+            "$ref": "#/components/schemas/Papel"
+          },
+          "conta_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Conta Id"
+          },
+          "conta_nome": {
+            "type": "string",
+            "title": "Conta Nome"
+          }
+        },
+        "type": "object",
+        "required": [
+          "usuario_id",
+          "nome",
+          "email",
+          "papel",
+          "conta_id",
+          "conta_nome"
+        ],
+        "title": "SessaoAtual"
+      },
+      "UsuarioSaida": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "nome": {
+            "type": "string",
+            "title": "Nome"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "papel": {
+            "$ref": "#/components/schemas/Papel"
+          },
+          "ativo": {
+            "type": "boolean",
+            "title": "Ativo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nome",
+          "email",
+          "papel",
+          "ativo"
+        ],
+        "title": "UsuarioSaida"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

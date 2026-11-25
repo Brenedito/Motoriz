@@ -1,0 +1,172 @@
+:root {
+  --fundo: #f9fafb;
+  --superficie: #ffffff;
+  --texto: #111827;
+  --discreto: #6b7280;
+  --borda: #d1d5db;
+  --primaria: #1f2937;
+  --erro: #b91c1c;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--texto);
+  background: var(--fundo);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+}
+
+/* Pensado primeiro para o celular: coluna única, alvos de toque de 44px. */
+.cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--primaria);
+  color: #fff;
+}
+
+.cabecalho nav {
+  display: flex;
+  gap: 1rem;
+  order: 3;
+  width: 100%;
+}
+
+.cabecalho nav a {
+  color: #d1d5db;
+  text-decoration: none;
+  padding: 0.5rem 0;
+}
+
+.cabecalho nav a.active {
+  color: #fff;
+  border-bottom: 2px solid #fff;
+}
+
+.conteudo {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.conteudo.estreito {
+  max-width: 24rem;
+  padding-top: 3rem;
+}
+
+h1 {
+  font-size: 1.5rem;
+  margin: 0 0 1rem;
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-weight: 600;
+}
+
+input,
+select {
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  font-weight: 400;
+  border: 1px solid var(--borda);
+  border-radius: 0.5rem;
+  background: var(--superficie);
+}
+
+button {
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  background: var(--primaria);
+  border: 1px solid var(--primaria);
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+button.secundario {
+  color: var(--primaria);
+  background: var(--superficie);
+  border-color: var(--borda);
+}
+
+.cabecalho button.secundario {
+  min-height: 36px;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.acoes {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.erro {
+  color: var(--erro);
+  margin: 0;
+}
+
+.discreto,
+.aviso {
+  color: var(--discreto);
+}
+
+.lista {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.lista li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 0.5rem;
+}
+
+.lista li div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.lista li.inativo {
+  opacity: 0.7;
+}
+
+@media (min-width: 40rem) {
+  .cabecalho nav {
+    order: 0;
+    width: auto;
+  }
+}
