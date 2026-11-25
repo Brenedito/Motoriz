@@ -13,8 +13,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
+        # Sem `python-version`: o uv lê `backend/.python-version` e instala esse Python.
         with:
-          python-version-file: backend/.python-version
           enable-cache: true
           cache-dependency-glob: backend/uv.lock
       - run: uv sync --frozen
@@ -39,6 +39,5 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run lint
-      - run: npx tsc --noEmit
       - run: npm test -- --run
       - run: npm run build

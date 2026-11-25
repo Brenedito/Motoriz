@@ -8,7 +8,7 @@ Por decisão do autor, todas as locadoras usam um único MySQL (spec §3). O MyS
 
 ## Decisão
 
-Toda tabela de dado de locadora tem `conta_id`; chaves únicas de negócio e índices começam por `conta_id`. A conta vem sempre da sessão autenticada, nunca do corpo ou da URL. Repositórios recebem um `ContextoConta` e filtram por ele. Como rede de proteção, um evento `do_orm_execute` do SQLAlchemy aplica `with_loader_criteria` a todo modelo da conta, e consulta sem contexto levanta erro (exceto código marcado como de plataforma). Uma suíte de isolamento cria duas contas e tenta ler e alterar dados da outra por cada rota; tudo deve responder 404. IDs são UUIDv7 em `BINARY(16)`, o que evita enumeração.
+Toda tabela de dado de locadora tem `conta_id`; chaves únicas de negócio e índices começam por `conta_id`. A conta vem sempre da sessão autenticada, nunca do corpo ou da URL. O filtro fica na sessão do banco, não nos repositórios: depois de autenticar, a requisição chama `definir_conta(sessao, conta_id)`, e um evento `do_orm_execute` do SQLAlchemy aplica `with_loader_criteria` a todo modelo `DaConta`; um evento `before_flush` recusa gravar objeto de outra conta. O filtro falha fechado: sem conta definida, nada que toque tabela da conta roda, e comandos que ele não sabe filtrar (Core sobre a tabela, `insert()` via `Session.execute`) são recusados. A saída é sempre explícita: `modo_plataforma(sessao)` para o código de plataforma (login, suporte) ou `execution_options(todas_as_contas=True)` numa consulta específica. Uma suíte de isolamento cria duas contas e tenta ler e alterar dados da outra por cada rota; tudo deve responder 404. IDs são UUIDv7 em `BINARY(16)`, o que evita enumeração.
 
 ## Consequências
 

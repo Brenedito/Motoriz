@@ -18,9 +18,10 @@ Na raiz do repositório, suba o MySQL:
 docker compose up -d mysql                 # MySQL de desenvolvimento
 ```
 
-Backend, a partir de `backend/`:
+Backend, a partir de `backend/`. A configuração vem de variáveis `MOTORIZ_*` ou de um `.env` no diretório em que o comando roda; copie o exemplo da raiz uma vez:
 
 ```bash
+cp ../.env.exemplo .env                    # URLs do MySQL local e cookie sem Secure
 uv sync                                    # instala as dependências
 uv run alembic upgrade head                # aplica as migrações
 uv run fastapi dev src/motoriz/app.py      # API em http://localhost:8000/api
@@ -58,7 +59,9 @@ docker compose exec api motoriz-suporte criar-locadora \
   --admin-nome "Ana" --admin-email ana@exemplo.com
 ```
 
-Em desenvolvimento local (sem Docker para a API), rode o mesmo comando em `backend/` com `uv run motoriz-suporte criar-locadora ...`, com as variáveis do `.env.exemplo` no ambiente. Entre em http://localhost:8080/entrar com o e-mail e a senha impressos.
+Entre em http://localhost:8080/entrar com o e-mail e a senha impressos.
+
+Em desenvolvimento local (sem Docker para a API), rode o mesmo comando em `backend/`, com o `backend/.env` copiado acima: `uv run motoriz-suporte criar-locadora ...`. Aí o endereço de login é o do Vite: http://localhost:5173/entrar.
 
 ## Como testar
 
