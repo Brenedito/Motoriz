@@ -76,17 +76,28 @@ describe("Usuarios", () => {
   test("erro da API ao desativar aparece na tela", async () => {
     sessaoComo("admin");
     servidor.use(
-      http.get("/api/usuarios", () => HttpResponse.json([ana])),
-      http.post(`/api/usuarios/${ID_ANA}/desativar`, () =>
-        HttpResponse.json({ erro: "Você não pode desativar o seu próprio usuário" }, { status: 422 }),
+      http.get("/api/usuarios", () => HttpResponse.json([ana, beto])),
+      http.post(`/api/usuarios/${ID_BETO}/desativar`, () =>
+        HttpResponse.json({ erro: "A conta precisa de ao menos um administrador ativo" }, { status: 422 }),
       ),
     );
     renderizarComRotas("/usuarios");
     await userEvent.click(await screen.findByRole("button", { name: "Desativar" }));
     expect(
-      await screen.findByText("Você não pode desativar o seu próprio usuário"),
+      await screen.findByText("A conta precisa de ao menos um administrador ativo"),
     ).toBeInTheDocument();
     // um 422 de regra de negócio não derruba a sessão
     expect(screen.getByText("ana@locadora.com")).toBeInTheDocument();
+  });
+
+  test("a linha do próprio admin não oferece Desativar", async () => {
+    sessaoComo("admin"); // a sessão é da Ana
+    servidor.use(http.get("/api/usuarios", () => HttpResponse.json([ana, beto])));
+    renderizarComRotas("/usuarios");
+    const linhaDaAna = (await screen.findByText("ana@locadora.com")).closest("li") as HTMLElement;
+    expect(within(linhaDaAna).queryByRole("button")).not.toBeInTheDocument();
+    expect(within(linhaDaAna).getByText(/você/)).toBeInTheDocument();
+    const linhaDoBeto = screen.getByText("beto@locadora.com").closest("li") as HTMLElement;
+    expect(within(linhaDoBeto).getByRole("button", { name: "Desativar" })).toBeInTheDocument();
   });
 });

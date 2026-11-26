@@ -4,6 +4,7 @@ from motoriz.compartilhado.contexto import Papel
 from motoriz.compartilhado.email import Email
 from motoriz.compartilhado.erros import RegraViolada
 from motoriz.compartilhado.ids import novo_id
+from motoriz.compartilhado.texto import TextoInvalido
 from motoriz.contas.dominio.usuario import Usuario, verificar_pode_desativar
 
 
@@ -47,3 +48,27 @@ def test_pode_desativar_admin_havendo_outro():
 
 def test_pode_desativar_operador_mesmo_com_um_admin():
     verificar_pode_desativar(usuario(papel=Papel.OPERADOR), autor_id=novo_id(), admins_ativos=1)
+
+
+def test_nome_do_usuario_e_aparado():
+    u = Usuario.novo(novo_id(), "  Ana  ", Email.de("ana@locadora.com"), Papel.OPERADOR, "h")
+    assert u.nome == "Ana"
+
+
+@pytest.mark.parametrize(
+    ("nome", "mensagem"),
+    [
+        ("", "Informe o nome"),
+        ("   ", "Informe o nome"),
+        ("a" * 201, "O nome deve ter no máximo 200 caracteres"),
+    ],
+)
+def test_nome_do_usuario_invalido(nome, mensagem):
+    with pytest.raises(TextoInvalido) as erro:
+        Usuario.novo(novo_id(), nome, Email.de("ana@locadora.com"), Papel.OPERADOR, "h")
+    assert erro.value.mensagem == mensagem
+
+
+def test_nome_com_200_caracteres_e_aceito():
+    nome = "a" * 200
+    assert Usuario.novo(novo_id(), nome, Email.de("a@b.com"), Papel.OPERADOR, "h").nome == nome

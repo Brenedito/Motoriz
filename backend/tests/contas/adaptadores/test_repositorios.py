@@ -2,7 +2,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 from sqlalchemy import create_engine, select, text
-from sqlalchemy.exc import IntegrityError, OperationalError
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.pool import NullPool
 
 from motoriz.compartilhado.contexto import Papel
@@ -17,6 +17,7 @@ from motoriz.contas.adaptadores.repositorios import (
     RepositorioSessoesSql,
     RepositorioUsuariosSql,
 )
+from motoriz.contas.dominio.erros import EmailJaCadastrado, LocadoraJaCadastrada
 from motoriz.contas.dominio.locadora import Locadora, SituacaoLocadora
 from motoriz.contas.dominio.sessao import Sessao
 from motoriz.contas.dominio.usuario import Usuario
@@ -63,8 +64,10 @@ def test_locadora_inexistente(sessao):
 
 
 def test_documento_de_locadora_e_unico(sessao, locadora_gravada):
+    # A checagem prévia do caso de uso não fecha a corrida entre duas criações simultâneas:
+    # quem perde bate na unique do banco, e o repositório traduz para o erro de domínio (409).
     repo = RepositorioLocadorasSql(sessao)
-    with pytest.raises(IntegrityError):
+    with pytest.raises(LocadoraJaCadastrada):
         repo.adicionar(Locadora.nova("Outra", locadora_gravada.documento, "o@o.com"))
 
 
@@ -157,7 +160,7 @@ def test_email_unico_na_plataforma(sessao, duas_contas):
     a, b = duas_contas
     definir_conta(sessao, a.conta_id)
     repo = RepositorioUsuariosSql(sessao)
-    with pytest.raises(IntegrityError):
+    with pytest.raises(EmailJaCadastrado):
         repo.adicionar(novo_usuario(a.conta_id, b.email))
 
 

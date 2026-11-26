@@ -15,10 +15,10 @@ export function Usuarios() {
   if (sessao?.papel !== "admin") {
     return <p role="alert">Apenas administradores podem gerenciar usuários.</p>;
   }
-  return <ListaDeUsuarios />;
+  return <ListaDeUsuarios meuId={sessao.usuario_id} />;
 }
 
-function ListaDeUsuarios() {
+function ListaDeUsuarios({ meuId }: { meuId: string }) {
   const queryClient = useQueryClient();
   const [criando, setCriando] = useState(false);
 
@@ -71,16 +71,22 @@ function ListaDeUsuarios() {
               <span className="discreto">
                 {ROTULO_PAPEL[u.papel]}
                 {u.ativo ? "" : " · inativo"}
+                {u.id === meuId ? " · você" : ""}
               </span>
             </div>
-            <button
-              type="button"
-              className="secundario"
-              disabled={alterarAtivo.isPending}
-              onClick={() => alterarAtivo.mutate({ id: u.id, acao: u.ativo ? "desativar" : "reativar" })}
-            >
-              {u.ativo ? "Desativar" : "Reativar"}
-            </button>
+            {/* O próprio usuário não pode se desativar: o botão só levaria a um erro. */}
+            {u.id !== meuId && (
+              <button
+                type="button"
+                className="secundario"
+                disabled={alterarAtivo.isPending}
+                onClick={() =>
+                  alterarAtivo.mutate({ id: u.id, acao: u.ativo ? "desativar" : "reativar" })
+                }
+              >
+                {u.ativo ? "Desativar" : "Reativar"}
+              </button>
+            )}
           </li>
         ))}
       </ul>

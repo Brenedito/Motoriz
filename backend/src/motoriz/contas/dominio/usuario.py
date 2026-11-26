@@ -6,6 +6,9 @@ from motoriz.compartilhado.contexto import Papel
 from motoriz.compartilhado.email import Email
 from motoriz.compartilhado.erros import RegraViolada
 from motoriz.compartilhado.ids import novo_id
+from motoriz.compartilhado.texto import texto_obrigatorio
+
+TAMANHO_MAXIMO_NOME = 200  # coluna `usuario.nome`
 
 
 @dataclass
@@ -23,7 +26,7 @@ class Usuario:
         return cls(
             id=novo_id(),
             conta_id=conta_id,
-            nome=nome,
+            nome=texto_obrigatorio(nome, campo="nome", maximo=TAMANHO_MAXIMO_NOME),
             email=email,
             papel=papel,
             hash_senha=hash_senha,

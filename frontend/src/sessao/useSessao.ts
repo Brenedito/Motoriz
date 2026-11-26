@@ -17,7 +17,11 @@ export function limparDadosDaConta(cliente: QueryClient): void {
 export function useSessao(): {
   sessao: SessaoAtual | null;
   carregando: boolean;
+  /** A leitura da sessão falhou por outro motivo que não 401 (5xx, rede): não é "sem sessão". */
+  falhou: boolean;
+  tentarDeNovo(): void;
   entrar(email: string, senha: string): Promise<void>;
+  /** Só limpa a sessão local depois de o servidor confirmar; senão, lança `ErroDaApi`. */
   sair(): Promise<void>;
 } {
   const queryClient = useQueryClient();
@@ -42,10 +46,20 @@ export function useSessao(): {
   }
 
   async function sair(): Promise<void> {
-    await api.DELETE("/api/sessao");
+    // Sair da tela com o cookie ainda válido faria a pessoa voltar logada sozinha. O 401 conta
+    // como saída: a sessão já tinha acabado no servidor.
+    const { error, response } = await api.DELETE("/api/sessao");
+    if (!response.ok && response.status !== 401) throw new ErroDaApi(response.status, error);
     queryClient.setQueryData(CHAVE_SESSAO, null);
     limparDadosDaConta(queryClient);
   }
 
-  return { sessao: consulta.data ?? null, carregando: consulta.isPending, entrar, sair };
+  return {
+    sessao: consulta.data ?? null,
+    carregando: consulta.isPending,
+    falhou: consulta.isError,
+    tentarDeNovo: () => void consulta.refetch(),
+    entrar,
+    sair,
+  };
 }

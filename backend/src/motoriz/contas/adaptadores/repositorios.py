@@ -10,6 +10,7 @@ from typing import Literal
 from uuid import UUID
 
 from sqlalchemy import inspect, select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from motoriz.compartilhado.contexto import Papel
@@ -18,12 +19,19 @@ from motoriz.compartilhado.email import Email
 from motoriz.compartilhado.erros import NaoEncontrado
 from motoriz.compartilhado.relogio import Relogio, RelogioDoSistema
 from motoriz.contas.adaptadores.orm import LocadoraOrm, SessaoOrm, UsuarioOrm
+from motoriz.contas.dominio.erros import EmailJaCadastrado, LocadoraJaCadastrada
 from motoriz.contas.dominio.locadora import Locadora, SituacaoLocadora
 from motoriz.contas.dominio.sessao import Sessao
 from motoriz.contas.dominio.usuario import Usuario
 from motoriz.infra.conta import OPCAO_TODAS_AS_CONTAS
 
 _TODAS_AS_CONTAS = {OPCAO_TODAS_AS_CONTAS: True}
+
+
+def _viola_unique(erro: IntegrityError, restricao: str) -> bool:
+    """A checagem prévia dos casos de uso não fecha a corrida entre dois cadastros simultâneos:
+    quem perde bate na unique do banco, e isso tem de virar 409, não 500."""
+    return restricao in str(erro.orig)
 
 
 # --- Locadoras -------------------------------------------------------------------------------
@@ -73,7 +81,12 @@ class RepositorioLocadorasSql:
                 criada_em=self._relogio.agora(),
             )
         )
-        self._sessao.flush()
+        try:
+            self._sessao.flush()
+        except IntegrityError as erro:
+            if _viola_unique(erro, "uq_locadora_documento"):
+                raise LocadoraJaCadastrada from erro
+            raise
 
     def salvar(self, loc: Locadora) -> None:
         orm = self._sessao.get(LocadoraOrm, loc.id)
@@ -177,7 +190,12 @@ class RepositorioUsuariosSql:
                 criado_em=self._relogio.agora(),
             )
         )
-        self._sessao.flush()
+        try:
+            self._sessao.flush()
+        except IntegrityError as erro:
+            if _viola_unique(erro, "uq_usuario_email"):
+                raise EmailJaCadastrado from erro
+            raise
 
     def salvar(self, u: Usuario) -> None:
         orm = self._orm(u.id)

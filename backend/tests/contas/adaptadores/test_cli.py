@@ -56,6 +56,17 @@ def test_suspender_locadora_inexistente_sai_com_1(
     assert capsys.readouterr().err == "Erro: Locadora não encontrada\n"
 
 
+def test_nome_longo_sai_com_1_sem_gravar(
+    capsys: pytest.CaptureFixture[str], banco_configurado: None
+):
+    doc = cnpj_valido_unico()
+    args = ["criar-locadora", "--nome", "a" * 201, "--documento", doc, "--contato", "x"]
+    args += ["--admin-nome", "Ana", "--admin-email", f"{novo_id().hex}@x.com"]
+    assert main(args) == 1
+    assert capsys.readouterr().err == "Erro: O nome deve ter no máximo 200 caracteres\n"
+    assert _criar(doc) == 0  # nada ficou gravado com esse documento
+
+
 def test_suspender_e_reativar(banco_configurado: None, cliente: TestClient, conta_a: ContaDaApi):
     assert main(["suspender-locadora", "--documento", conta_a.documento]) == 0
     resposta = cliente.post("/api/sessao", json={"email": conta_a.admin_email, "senha": SENHA})

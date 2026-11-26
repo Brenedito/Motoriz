@@ -106,6 +106,21 @@ def test_email_duplicado_409(cliente, conta_a, conta_b):
     assert (r.status_code, r.json()) == (409, {"erro": "Já existe um usuário com este e-mail"})
 
 
+@pytest.mark.parametrize(
+    ("campo", "valor", "erro"),
+    [
+        ("nome", "   ", "Informe o nome"),
+        ("nome", "a" * 201, "O nome deve ter no máximo 200 caracteres"),
+        ("email", "a" * 250 + "@x.com", "E-mail inválido"),
+    ],
+)
+def test_texto_vazio_ou_maior_que_a_coluna_422(cliente, conta_a, campo, valor, erro):
+    # Sem a validação no domínio, o texto longo chegava ao MySQL e virava DataError (500).
+    entrar(cliente, conta_a.admin_email, SENHA)
+    r = cliente.post("/api/usuarios", json={**_novo_usuario(), campo: valor})
+    assert (r.status_code, r.json()) == (422, {"erro": erro})
+
+
 def test_senha_inicial_fraca_422(cliente, conta_a):
     entrar(cliente, conta_a.admin_email, SENHA)
     r = cliente.post("/api/usuarios", json={**_novo_usuario(), "senha_inicial": "curta"})
